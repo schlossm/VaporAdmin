@@ -1,0 +1,45 @@
+#extend("admin-base"):
+    #export("head-extras"): <script src="/adminCreate.js"></script> #endexport
+    #export("title"): Admin / #(modelName) / Create New #endexport
+    #export("admin-body"):
+        <div class="list-group mt-1">
+            <div class="list-group-item list-group-item-info pb-0">
+                <h4>#(modelName) / Create New</h4>
+            </div>
+            <div class="list-group-item pb-3">
+                <form id="entryCreateForm">
+                    #for(field in fields):
+                        <div class="col mb-3">
+                            <label for="#(field.key)" class="form-label">#(field.key)</label>
+                            #if(field.fieldType.number):
+                                <input class="form-control" type="number" id="#(field.key)" name="#(field.key)" min="0" required>
+                            #elseif(field.fieldType.text):
+                                <textarea class="form-control" id="#(field.key)" name="#(field.key)" required></textarea>
+                            #elseif(field.fieldType.relationship):
+                                <select class="form-select" id="#(field.key)" name="#(field.key)" #if(!field.fieldType.relationship.optional): required #endif>
+                                    #if(field.fieldType.relationship.optional):
+                                        <option selected value> -- No Relationship -- </option>
+                                    #endif
+                                    #for(possibleValue in field.fieldType.relationship.possibleValues):
+                                        <option value="#(possibleValue.id)">#(possibleValue.displayName)</option>
+                                    #endfor
+                                </select>
+                            #else:
+                                <select class="form-select" id="#(field.key)" name="#(field.key)" required>
+                                    #for(possibleValue in field.fieldType.array.possibleValues):
+                                        <option value="#(possibleValue)">#(possibleValue)</option>
+                                    #endfor
+                                </select>
+                            #endif
+                        </div>
+                    #endfor
+                    <div class="row ms-0">
+                        <button id="create" type="submit" class="btn btn-primary col-auto">Create</button>
+                        <p id="savedText" class="text-success ms-2 col-auto h-auto my-auto" hidden>Created!</p>
+                        <p id="errorText" class="text-danger ms-2 col-auto h-auto my-auto" hidden>Failed to create: </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    #endexport
+#endextend

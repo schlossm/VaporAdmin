@@ -1,0 +1,53 @@
+#extend("admin-base"):
+    #export("head-extras"): <script src="/adminDetail.js"></script> #endexport
+    #export("title"): Admin / #(modelName) / #(entryID) #endexport
+    #export("admin-body"):
+        <div class="list-group mt-1">
+            <div class="list-group-item list-group-item-info pb-0">
+                <h4>#(modelName) / #(displayName)</h4>
+            </div>
+            <div class="list-group-item pb-3">
+                <form id="entryDetailForm">
+                    #for(field in fields):
+                        <div class="col mb-3">
+                            <label for="#(field.key)" class="form-label">#(field.key)</label>
+                            #if(field.fieldType.number):
+                                <input class="form-control" type="number" id="#(field.key)" name="#(field.key)" min="0" value="#(field.value)">
+                            #elseif(field.fieldType.text):
+                                <textarea class="form-control" id="#(field.key)" name="#(field.key)">#(field.value)</textarea>
+                            #elseif(field.fieldType.relationship):
+                                <select class="form-select" id="#(field.key)" name="#(field.key)">
+                                    #if(field.fieldType.relationship.optional):
+                                        <option #if(field.value == ""): selected #endif value> -- No Relationship -- </option>
+                                    #endif
+                                    #for(possibleValue in field.fieldType.relationship.possibleValues):
+                                        #if(possibleValue.id == field.value):
+                                            <option selected value="#(possibleValue.id)">#(possibleValue.displayName)</option>
+                                        #else:
+                                            <option value="#(possibleValue.id)">#(possibleValue.displayName)</option>
+                                        #endif
+                                    #endfor
+                                </select>
+                            #else:
+                                <select class="form-select" id="#(field.key)" name="#(field.key)">
+                                    #for(possibleValue in field.fieldType.array.possibleValues):
+                                        #if(possibleValue == field.value):
+                                            <option selected value="#(possibleValue)">#(possibleValue)</option>
+                                        #else:
+                                            <option value="#(possibleValue)">#(possibleValue)</option>
+                                        #endif
+                                    #endfor
+                                </select>
+                            #endif
+                        </div>
+                    #endfor
+                    <div class="row ms-0">
+                        <button id="save" type="submit" class="btn btn-primary col-auto">Save</button>
+                        <p id="savedText" class="text-success ms-2 col-auto h-auto my-auto" hidden>Saved!</p>
+                        <p id="errorText" class="text-danger ms-2 col-auto h-auto my-auto" hidden>Failed to save: </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    #endexport
+#endextend

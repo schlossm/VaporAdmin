@@ -1,0 +1,18 @@
+#extend("admin-base"):
+    #export("title"): Admin #endexport
+    #export("admin-body"):
+        <div class="list-group mt-1">
+            <div class="list-group-item list-group-item-success pb-0">
+                <h4>Models</h4>
+            </div>
+            #for(modelName in modelNames):
+                <div class="list-group-item">
+                    <div class="d-flex w-100 align-items-center">
+                        <a class="col-auto h-100" href="/admin/models/#(modelName)">#(modelName)</a>
+                        <a href="/admin/models/#(modelName)/create" class="btn btn-primary col-auto ms-auto">Add New</a>
+                    </div>
+                </div>
+            #endfor
+        </div>
+    #endexport
+#endextend
