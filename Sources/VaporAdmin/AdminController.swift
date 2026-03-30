@@ -6,6 +6,7 @@
 //
 
 import PassageFluent
+import Foundation
 import Passage
 import Fluent
 import Vapor
