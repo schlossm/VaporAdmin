@@ -52,10 +52,6 @@ public struct Admin : Sendable
                 routes: .init(group: "admin"),
                 sessions: .init(enabled: true),
                 views: .init(
-                    register: .init(style: .minimalism,
-                                    theme: .init(colors: .mintDark),
-                                    redirect: .init(onSuccess: "/admin/"),
-                                    identifier: .username),
                     login: .init(
                         style: .minimalism,
                         theme: .init(
