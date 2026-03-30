@@ -1,5 +1,5 @@
 {
-  "originHash" : "d01bfb723c9c7492932e9fd76d5a5473e7e1592b29bd27ab79ee7d172186a543",
+  "originHash" : "deeeb601335d971aa03db57c639438d962173b4a6897f0381d85f92718fc39ae",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -94,19 +94,19 @@
     {
       "identity" : "passage",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/vapor-community/passage",
+      "location" : "https://github.com/schlossm/passage",
       "state" : {
-        "branch" : "main",
-        "revision" : "0eb6a4165f9321d179b5198769fd1cc4f8cd59ec"
+        "branch" : "linux-crypto",
+        "revision" : "a1b5fadc898aee21ac2a544c51ecdebeee8840b9"
       }
     },
     {
       "identity" : "passage-fluent",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/rozd/passage-fluent.git",
+      "location" : "https://github.com/schlossm/passage-fluent.git",
       "state" : {
-        "revision" : "775fc0372c5cdf589d047498d5571ada96b31f5c",
-        "version" : "0.0.4"
+        "branch" : "linux-crypto",
+        "revision" : "682510766d52459ea73c729bb3d1c5e677afbd52"
       }
     },
     {
