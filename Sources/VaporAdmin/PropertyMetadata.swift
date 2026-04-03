@@ -1,4 +1,5 @@
 import Fluent
+import Foundation
 import struct Foundation.UUID
 
 /// Defines a single `adminMetadata` property.  Add the `@AdminDisplayable` Macro to properly conform to this protocol
@@ -17,10 +18,10 @@ public protocol FluentPropertyMetadata
 /// Metadata that describes each Fluent property
 public struct PropertyMetadata<T>
 {
-    package let name : String
-    package let fluentKeypath : AnyKeyPath
-    package let dataKeypath : AnyKeyPath
-    package let metadata : (any FluentPropertyMetadata)?
+    let name : String
+    let fluentKeypath : AnyKeyPath
+    let dataKeypath : AnyKeyPath
+    let metadata : (any FluentPropertyMetadata)?
     
     public init(name: String, fluentKeypath: AnyKeyPath, dataKeypath: AnyKeyPath, metadata: (any FluentPropertyMetadata)?)
     {
@@ -49,16 +50,16 @@ public struct OptionalProperty : FluentPropertyMetadata
     public init() {}
 }
 
-package protocol RelationshipProperty : FluentPropertyMetadata
+protocol RelationshipProperty : FluentPropertyMetadata
 {
-    associatedtype RelationshipModel : Model where RelationshipModel.IDValue == UUID
+    associatedtype RelationshipModel : Model
     associatedtype BaseModel : Model
     
-    func getRelationshipModels(from database: Database) async throws -> [AdminField.Relationship]
+    func getRelationshipModels(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
     
     func nilOut<T: Model>(on model: T, fluentKeypath: AnyKeyPath)
-    func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> UUID?
-    func setNewEntry<T: Model>(id: UUID, fluentKeypath: AnyKeyPath, on model: T, from database: Database)
+    func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> RelationshipModel.IDValue?
+    func setNewEntry<T: Model>(from data: Data, decoder: JSONDecoder, fluentKeypath: AnyKeyPath, on model: T, from database: Database) throws
 }
 
 /// Describes a Fluent Relationship property
@@ -81,7 +82,7 @@ public struct OptionalRelationshipProperty<BaseModel : Model, RelationshipModel 
 
 extension RelationshipProperty
 {
-    package func getRelationshipModels(from database: Database) async throws -> [AdminField.Relationship]
+    func getRelationshipModels(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
     {
         let values = try await database.query(RelationshipModel.self).all()
         return values.compactMap
@@ -89,18 +90,18 @@ extension RelationshipProperty
             if let displayable = value as? any CustomAdminDisplayable
             {
                 guard let id = value.id else { return nil }
-                return AdminField.Relationship(displayName: displayable.displayString, id: String(describing: id))
+                return ModelInstancePropertyRepresentation.Relationship(displayName: displayable.displayString, id: String(describing: id))
             }
             else
             {
                 assertionFailure("\(type(of: value)) doesn't conform to `AdminDisplayable`")
                 guard let id = value.id else { return nil }
-                return AdminField.Relationship(displayName: String(describing: id), id: String(describing: id))
+                return ModelInstancePropertyRepresentation.Relationship(displayName: String(describing: id), id: String(describing: id))
             }
         }
     }
     
-    package func nilOut<T: Model>(on model: T, fluentKeypath: AnyKeyPath)
+    func nilOut<T: Model>(on model: T, fluentKeypath: AnyKeyPath)
     {
         let model = model as! BaseModel
         if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
@@ -109,7 +110,7 @@ extension RelationshipProperty
         }
     }
     
-    package func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> UUID?
+    func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> RelationshipModel.IDValue?
     {
         let model = model as! BaseModel
         if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
@@ -119,8 +120,9 @@ extension RelationshipProperty
         return nil
     }
     
-    package func setNewEntry<T: Model>(id: UUID, fluentKeypath: AnyKeyPath, on model: T, from database: Database)
+    func setNewEntry<T: Model>(from data: Data, decoder: JSONDecoder, fluentKeypath: AnyKeyPath, on model: T, from database: Database) throws
     {
+        let id = try decoder.decode(DecodedData<RelationshipModel.IDValue>.self, from: data).field
         let model = model as! BaseModel
         if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
         {

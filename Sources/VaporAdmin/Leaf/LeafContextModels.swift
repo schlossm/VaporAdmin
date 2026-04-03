@@ -5,7 +5,7 @@
 //  Created by Michael Schloss on 3/1/26.
 //
 
-package struct AdminContext
+struct AdminContext
 {
     struct Header : Codable
     {
@@ -48,7 +48,7 @@ package struct AdminContext
                 let displayName : String
                 let id : String
                 
-                init(adminField: AdminField.Relationship)
+                init(adminField: ModelInstancePropertyRepresentation.Relationship)
                 {
                     self.displayName = adminField.displayName
                     self.id = adminField.id
@@ -62,7 +62,7 @@ package struct AdminContext
                 case array(possibleValues: [String])
                 case relationship(optional: Bool, possibleValues: [Relationship])
                 
-                init(fieldType: AdminField.FieldType)
+                init(fieldType: ModelInstancePropertyRepresentation.FieldType)
                 {
                     switch fieldType
                     {

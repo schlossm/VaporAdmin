@@ -11,16 +11,16 @@ import Passage
 import Fluent
 import Vapor
 
-package final class AdminController : RouteCollection, Sendable
+final class AdminController : RouteCollection, Sendable
 {
-    private let databaseManager : AdminDatabaseManager
+    private let databaseManager : ModelCoordinator
     
-    package init(app: Application)
+    init(app: Application)
     {
         databaseManager = app.admin.databaseManager
     }
     
-    package func boot(routes: any RoutesBuilder) throws
+    func boot(routes: any RoutesBuilder) throws
     {
         registerJSFiles(on: routes)
         
@@ -34,10 +34,14 @@ package final class AdminController : RouteCollection, Sendable
             try await self.root(request: req)
         }
         
+        // /admin/<modelName>
+        
         protected.get("models", ":modelName") { req in
             let modelName = try req.parameters.require("modelName")
             return try await self.modelEntryListView(model: modelName, request: req)
         }
+        
+        // /admin/<modelName>/create
         
         protected.get("models", ":modelName", "create") { req in
             let modelName = try req.parameters.require("modelName")
@@ -48,6 +52,8 @@ package final class AdminController : RouteCollection, Sendable
             let modelName = try req.parameters.require("modelName")
             return try await self.modelEntryCreateSave(model: modelName, request: req)
         }
+        
+        // /admin/<modelName>/details/<modelID>
         
         protected.get("models", ":modelName", "details", ":entry") { req in
             let modelName = try req.parameters.require("modelName")
@@ -65,7 +71,8 @@ package final class AdminController : RouteCollection, Sendable
         }
     }
     
-    private func registerJSFiles(on routes: any RoutesBuilder) {
+    private func registerJSFiles(on routes: any RoutesBuilder)
+    {
         routes.get("adminTheme.js") { (request: Request) in
             guard let resourcePath = Bundle.module.path(forResource: "adminTheme", ofType: "js", inDirectory: "Public") else {
                 return Response(status: .notFound)
@@ -114,7 +121,7 @@ package final class AdminController : RouteCollection, Sendable
                                                                         .init(text: model, relativeHREF: "", isActive: true)
                                                                     ]),
                                                       modelName: model,
-                                                      entries: entries.map { .init(id: $0.id, text: $0.key) })
+                                                      entries: entries.map { .init(id: $0.id, text: $0.description) })
         return try await request.view.render("admin-entryList", adminEntryListContext)
     }
     
@@ -122,7 +129,7 @@ package final class AdminController : RouteCollection, Sendable
     {
         let username = try request.passage.user.username!
         let details = try await databaseManager.details(for: parameters, model: model)
-        let rawModels = details.fields
+        let rawModels = details.properties
         
         let adminEntryDetailContext = AdminContext.Detail(header: .init(username: username,
                                                                         breadcrumbs: [
@@ -131,7 +138,7 @@ package final class AdminController : RouteCollection, Sendable
                                                                             .init(text: String(describing: details.id), relativeHREF: "", isActive: true)
                                                                         ]),
                                                           modelName: model,
-                                                          displayName: details.displayName,
+                                                          displayName: details.description,
                                                           entryID: String(describing: details.id),
                                                           fields: rawModels.map { .init(key: $0.key, value: $0.value, fieldType: .init(fieldType: $0.type)) })
         return try await request.view.render("admin-entryDetail", adminEntryDetailContext)

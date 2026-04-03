@@ -9,13 +9,13 @@ import SwiftSyntax
 
 typealias PropertyMetadataMacroDefinition = @Sendable (String, String) -> String
 
-package struct FluentPropertyMetadataDefinition : CaseIterable, Sendable
+struct FluentPropertyMetadataDefinition : CaseIterable, Sendable
 {
     let propertyWrapper : TokenKind
     let definition : PropertyMetadataMacroDefinition?
     
     // TODO: Add support for other Relationship-based PropertyWrappers
-    package static let allCases : [FluentPropertyMetadataDefinition] = [
+    static let allCases : [FluentPropertyMetadataDefinition] = [
         .init(propertyWrapper: .identifier("Boolean"), definition: nil),
 //        .init(propertyWrapper: "Children", definition: { "VaporAdmin.NonOptionalRelationshipProperty<\($0), \($1)>()" }),
 //        .init(propertyWrapper: "CompositeChildren", definition: { "VaporAdmin.NonOptionalRelationshipProperty<\($0), \($1)>()" }),

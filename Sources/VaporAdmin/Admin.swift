@@ -23,9 +23,9 @@ public protocol CustomAdminDisplayable
 /// Entry point into the Admin Portal
 public struct Admin : Sendable
 {
-    package let databaseManager : AdminDatabaseManager
+    let databaseManager : ModelCoordinator
     
-    package init(database: Database)
+    init(database: Database)
     {
         databaseManager = .init(database: database)
     }
