@@ -18,14 +18,14 @@ class ModelCoordinator : @unchecked Sendable
         self.database = database
     }
     
-    func register<T: FluentAdminDisplay & Model>(_ model: T.Type) where T.IDValue : LosslessStringConvertible
+    func register<ModelType: FluentAdminDisplay & Model>(_ model: ModelType.Type) where ModelType.IDValue : LosslessStringConvertible
     {
         let description = String(describing: model)
         if models[description] != nil
         {
             assertionFailure("\(model) is already registered")
         }
-        models[String(describing: model)] = _ModelBox(modelType: model, database: database)
+        models[String(describing: model)] = _ModelBox<ModelType>(database: database)
     }
     
     func listModels() -> [String]

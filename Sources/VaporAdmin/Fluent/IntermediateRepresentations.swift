@@ -5,15 +5,15 @@
 //  Created by Michael Schloss on 4/2/26.
 //
 
-struct ModelInstancePropertyRepresentation
+struct ModelInstancePropertyRepresentation : Codable
 {
-    struct Relationship
+    struct Relationship : Codable
     {
         let displayName : String
         let id : String
     }
     
-    enum FieldType
+    enum FieldType : Codable
     {
         case text
         case number
@@ -21,9 +21,9 @@ struct ModelInstancePropertyRepresentation
         case relationship(optional: Bool, possibleValues: [Relationship])
     }
     
-    let type : FieldType
     let key : String
     let value : String
+    let fieldType : FieldType
 }
 
 struct ModelInstanceRepresentation

@@ -10,8 +10,6 @@ import Vapor
 
 protocol ModelBox
 {
-    associatedtype IDValue
-    
     func instances() async throws -> [ModelInstanceRepresentation]
     
     func instanceProperties(parameters: Parameters) async throws -> ModelInstancePropertiesRepresentation
@@ -25,32 +23,44 @@ protocol ModelBox
     func attemptDelete(parameters: Parameters) async throws
 }
 
-struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox where IDValue == ModelType.IDValue
+private let jsonDecoder : JSONDecoder = {
+    let decoder = JSONDecoder()
+    decoder.assumesTopLevelDictionary = true
+    return decoder
+}()
+
+private let jsonEncoder : JSONEncoder = {
+    let encoder = JSONEncoder()
+    return encoder
+}()
+
+struct _ModelBox<ModelType : FluentAdminDisplay & Model> : ModelBox
 {
-    let modelType : ModelType.Type
-    let database : Database
+    typealias IDValue = ModelType.IDValue
+    
+    private let database : Database
+    private let fieldTypeCache = [AnyKeyPath : ModelInstancePropertyRepresentation.FieldType]()
     
     private var idField : KeyPath<ModelType, Fluent.IDProperty<ModelType, IDValue>>
     {
-        modelType.adminMetadata.filter { $0.metadata is IDProperty }.first!.fluentKeypath as! KeyPath<ModelType, Fluent.IDProperty<ModelType, IDValue>>
+        ModelType.adminMetadata.filter { $0.metadata is IDProperty }.first!.fluentKeypath as! KeyPath<ModelType, Fluent.IDProperty<ModelType, IDValue>>
     }
     
-    init(modelType: ModelType.Type, database: Database)
+    init(database: Database)
     {
-        self.modelType = modelType
         self.database = database
     }
     
     func instances() async throws -> [ModelInstanceRepresentation]
     {
-        let entries = try await database.query(modelType).all()
+        let entries = try await database.query(ModelType.self).all()
         return entries.map { .init(id: String(describing: $0.id!), description: getDisplayString(from: $0)) }
     }
     
     func instanceProperties(parameters: Parameters) async throws -> ModelInstancePropertiesRepresentation
     {
         let entry = try parameters.require("entry", as: IDValue.self)
-        guard let model = try await database.query(modelType).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
+        guard let model = try await database.query(ModelType.self).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
         
         let fields = try await _fields(for: model)
         return .init(id: String(describing: model.id!), description: getDisplayString(from: model), properties: fields)
@@ -60,7 +70,7 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox whe
     {
         let entry = try parameters.require("entry", as: IDValue.self)
         let data = try data.decode([String : String].self)
-        guard let model = try await database.query(modelType).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
+        guard let model = try await database.query(ModelType.self).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
         
         try await updateFields(on: model, data: data, create: false)
     }
@@ -73,7 +83,7 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox whe
     
     func attemptCreate(data: any ContentContainer) async throws
     {
-        let newModel = try data.decode(ModelType.self)
+        let newModel = ModelType.init() // try data.decode(ModelType.self)
         let data = try data.decode([String : String].self)
         try await updateFields(on: newModel, data: data, create: true)
     }
@@ -81,7 +91,7 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox whe
     func attemptDelete(parameters: Parameters) async throws
     {
         let entry = try parameters.require("entry", as: IDValue.self)
-        guard let model = try await database.query(modelType).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
+        guard let model = try await database.query(ModelType.self).filter(idField == entry).first() else { throw AdminError.couldNotFindInstance }
         try await model.delete(on: database)
     }
     
@@ -117,11 +127,11 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox whe
         
             if let value
             {
-                output.append(.init(type: fieldType, key: key, value: String(describing: value)))
+                output.append(.init(key: key, value: String(describing: value), fieldType: fieldType))
             }
             else
             {
-                output.append(.init(type: fieldType, key: key, value: ""))
+                output.append(.init(key: key, value: "", fieldType: fieldType))
             }
         }
         
@@ -130,17 +140,6 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model, IDValue> : ModelBox whe
     
     private func updateFields(on model: ModelType, data: [String : String], create: Bool) async throws
     {
-        let jsonDecoder : JSONDecoder = {
-            let decoder = JSONDecoder()
-            decoder.assumesTopLevelDictionary = true
-            return decoder
-        }()
-        
-        let jsonEncoder : JSONEncoder = {
-            let encoder = JSONEncoder()
-            return encoder
-        }()
-        
         func decode<T : Decodable>(data: Data, innerType: T.Type) throws -> T
         {
             try jsonDecoder.decode(DecodedData<T>.self, from: data).field

@@ -41,57 +41,12 @@ struct AdminContext
     
     struct Detail : Codable
     {
-        struct Field : Codable
-        {
-            struct Relationship : Codable
-            {
-                let displayName : String
-                let id : String
-                
-                init(adminField: ModelInstancePropertyRepresentation.Relationship)
-                {
-                    self.displayName = adminField.displayName
-                    self.id = adminField.id
-                }
-            }
-            
-            enum FieldType : Codable
-            {
-                case text
-                case number
-                case array(possibleValues: [String])
-                case relationship(optional: Bool, possibleValues: [Relationship])
-                
-                init(fieldType: ModelInstancePropertyRepresentation.FieldType)
-                {
-                    switch fieldType
-                    {
-                    case .text:
-                        self = .text
-                        
-                    case .number:
-                        self = .number
-                        
-                    case .array(let possibleValues):
-                        self = .array(possibleValues: possibleValues)
-                        
-                    case .relationship(let isOptional, let possibleValues):
-                        self = .relationship(optional: isOptional, possibleValues: possibleValues.map(Relationship.init(adminField:)))
-                    }
-                }
-            }
-            
-            let key : String
-            let value : String
-            let fieldType : FieldType
-        }
-        
         struct Create : Codable
         {
             let header : Header
             let modelName : String
             
-            let fields : [Field]
+            let fields : [ModelInstancePropertyRepresentation]
         }
         
         let header : Header
@@ -99,6 +54,6 @@ struct AdminContext
         let displayName : String
         let entryID : String
         
-        let fields : [Field]
+        let fields : [ModelInstancePropertyRepresentation]
     }
 }

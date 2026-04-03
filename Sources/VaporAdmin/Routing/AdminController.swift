@@ -140,7 +140,7 @@ final class AdminController : RouteCollection, Sendable
                                                           modelName: model,
                                                           displayName: details.description,
                                                           entryID: String(describing: details.id),
-                                                          fields: rawModels.map { .init(key: $0.key, value: $0.value, fieldType: .init(fieldType: $0.type)) })
+                                                          fields: rawModels)
         return try await request.view.render("admin-entryDetail", adminEntryDetailContext)
     }
     
@@ -164,7 +164,7 @@ final class AdminController : RouteCollection, Sendable
                                                                                 .init(text: "Create New", relativeHREF: "", isActive: true)
                                                                                ]),
                                                                  modelName: model,
-                                                                 fields: details.map { .init(key: $0.key, value: $0.value, fieldType: .init(fieldType: $0.type)) })
+                                                                 fields: details)
         return try await request.view.render("admin-entryCreate", adminEntryDetailContext)
     }
     
