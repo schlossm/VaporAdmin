@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0-latest"),
         .package(url: "https://github.com/vapor/vapor.git", from: "4.110.1"),
         .package(url: "https://github.com/vapor/fluent.git", from: "4.9.0"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.52.2"),
         .package(url: "https://github.com/vapor/leaf.git", from: "4.3.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
@@ -57,6 +58,7 @@ let package = Package(
                     .target(name: "VaporAdmin"),
                     .target(name: "VaporAdminMacros"),
                     .product(name: "Fluent", package: "fluent"),
+                    .product(name: "XCTFluent", package: "fluent-kit"),
                     .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
                 ],
                 swiftSettings: swiftSettings

@@ -5,15 +5,15 @@
 //  Created by Michael Schloss on 4/2/26.
 //
 
-struct ModelInstancePropertyRepresentation : Codable
+struct ModelInstancePropertyRepresentation : Codable, Equatable
 {
-    struct Relationship : Codable
+    struct Relationship : Codable, Equatable
     {
         let displayName : String
         let id : String
     }
     
-    enum FieldType : Codable
+    enum FieldType : Codable, Equatable
     {
         case text
         case number
@@ -26,13 +26,13 @@ struct ModelInstancePropertyRepresentation : Codable
     let fieldType : FieldType
 }
 
-struct ModelInstanceRepresentation
+struct ModelInstanceRepresentation : Equatable
 {
     let id : String
     let description : String
 }
 
-struct ModelInstancePropertiesRepresentation
+struct ModelInstancePropertiesRepresentation : Equatable
 {
     let id : String
     let description : String

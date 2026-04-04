@@ -86,18 +86,9 @@ extension RelationshipProperty
     {
         let values = try await database.query(RelationshipModel.self).all()
         return values.compactMap
-        { value in
-            if let displayable = value as? any CustomAdminDisplayable
-            {
-                guard let id = value.id else { return nil }
-                return ModelInstancePropertyRepresentation.Relationship(displayName: displayable.displayString, id: String(describing: id))
-            }
-            else
-            {
-                assertionFailure("\(type(of: value)) doesn't conform to `AdminDisplayable`")
-                guard let id = value.id else { return nil }
-                return ModelInstancePropertyRepresentation.Relationship(displayName: String(describing: id), id: String(describing: id))
-            }
+        { value -> ModelInstancePropertyRepresentation.Relationship? in
+            guard let id = value.id else { return nil }
+            return ModelInstancePropertyRepresentation.Relationship(displayName: value.adminDescription, id: String(describing: id))
         }
     }
     
