@@ -20,6 +20,9 @@ public protocol CustomAdminDisplayable
     var displayString : String { get }
 }
 
+/// To conform a Model, add the ``AdminDisplayable()``.
+public typealias AdminModel = FluentAdminDisplay & Model
+
 /// Entry point into the Admin Portal
 public struct Admin : Sendable
 {
@@ -27,7 +30,12 @@ public struct Admin : Sendable
     
     init(database: Database)
     {
-        databaseManager = .init(database: database)
+        databaseManager = .init(database: database) { modelType in
+            func makeModelBox<ModelType: AdminModel>(_ model: ModelType.Type) -> any ModelBox {
+                _ModelBox<ModelType>(database: database)
+            }
+            return makeModelBox(modelType)
+        }
     }
     
     /// Configures the admin portal
@@ -36,21 +44,30 @@ public struct Admin : Sendable
     /// * Registers leaf templates
     /// * Adds admin routes to the app's router
     /// * Configures `Passage` for user authentication
+    ///
     public func configure(app: Application, origin: URL) async throws
     {
-        try registerLeafTemplates(on: app)
-        try app.register(collection: AdminController(app: app))
-        
-        // Set up your database store
         let store = DatabaseStore(app: app, db: app.db)
+        try await self.configure(app: app,
+                                 origin: origin,
+                                 jwks: nil,
+                                 services: .init(store: store, emailDelivery: nil, phoneDelivery: nil),
+                                 userModelType: PassageFluent.UserModel.self)
+    }
+    
+    func configure<UserModel: Authenticatable & Sendable>(app: Application, origin: URL, jwks: String?, services: Passage.Services, userModelType: UserModel.Type) async throws
+    {
+        try registerLeafTemplates(on: app)
+        try app.register(collection: AdminController<UserModel>(app: app))
         
         // Configure Passage
         try await app.passage.configure(
-            services: .init(store: store, emailDelivery: nil, phoneDelivery: nil),
+            services: services,
             configuration: .init(
                 origin: origin,
                 routes: .init(group: "admin"),
                 sessions: .init(enabled: true),
+                jwt: jwks != nil ? .init(jwks: .init(json: jwks!)) : nil,
                 views: .init(
                     login: .init(
                         style: .minimalism,
@@ -86,8 +103,7 @@ public struct Admin : Sendable
     /// Register a `Model` for management through the admin portal
     ///
     /// To register a compatible model, add the ``AdminDisplayable()`` macro to the `Model`.
-    /// - Warning: Due to interop with HTML + JS, the `Model`'s `IDValue` must also conform to ``LosslessStringConvertible``.  Most common `IDValue` types already do
-    public func register<T: FluentAdminDisplay & Model>(_ model: T.Type) where T.IDValue : LosslessStringConvertible
+    public func register<T: AdminModel>(_ model: T.Type)
     {
         databaseManager.register(model)
     }

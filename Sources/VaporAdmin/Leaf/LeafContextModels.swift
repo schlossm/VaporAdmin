@@ -1,6 +1,6 @@
 //
 //  LeafContextModels.swift
-//  mascomputech
+//  VaporAdmin
 //
 //  Created by Michael Schloss on 3/1/26.
 //
@@ -9,7 +9,7 @@ struct AdminContext
 {
     struct Header : Codable
     {
-        struct Breadcrumb : Codable
+        struct Breadcrumb : Codable, Equatable
         {
             let text : String
             let relativeHREF : String
@@ -28,7 +28,7 @@ struct AdminContext
     
     struct List : Codable
     {
-        struct Entry : Codable
+        struct Entry : Codable, Equatable
         {
             let id : String
             let text : String

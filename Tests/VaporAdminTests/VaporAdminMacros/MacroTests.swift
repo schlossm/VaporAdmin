@@ -54,9 +54,9 @@ class VaporAdminMacroTests : XCTestCase
             
                 static var adminMetadata: [VaporAdmin.PropertyMetadata<Foo>] {
                     [
-                        VaporAdmin.PropertyMetadata(name: "id", fluentKeypath: \\Foo.$id, dataKeypath: \\Foo.id, metadata: VaporAdmin.IDProperty()),
-                        VaporAdmin.PropertyMetadata(name: "name", fluentKeypath: \\Foo.$name, dataKeypath: \\Foo.name, metadata: nil),
-                        VaporAdmin.PropertyMetadata(name: "bar", fluentKeypath: \\Foo.$bar, dataKeypath: \\Foo.bar, metadata: VaporAdmin.OptionalRelationshipProperty<Foo, Bar>())
+                        VaporAdmin.PropertyMetadata(name: "id", fluentKeypath: \\Foo.$id, dataKeypath: \\Foo.$id.value, metadata: VaporAdmin.IDProperty()),
+                        VaporAdmin.PropertyMetadata(name: "name", fluentKeypath: \\Foo.$name, dataKeypath: \\Foo.$name.value, metadata: nil),
+                        VaporAdmin.PropertyMetadata(name: "bar", fluentKeypath: \\Foo.$bar, dataKeypath: \\Foo.$bar.value, metadata: VaporAdmin.OptionalRelationshipProperty<Foo, Bar>())
                     ]
                 }
             }

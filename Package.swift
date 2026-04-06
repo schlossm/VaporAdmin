@@ -58,7 +58,9 @@ let package = Package(
                     .target(name: "VaporAdmin"),
                     .target(name: "VaporAdminMacros"),
                     .product(name: "Fluent", package: "fluent"),
+                    .product(name: "VaporTesting", package: "vapor"),
                     .product(name: "XCTFluent", package: "fluent-kit"),
+                    .product(name: "PassageOnlyForTest", package: "passage"),
                     .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
                 ],
                 swiftSettings: swiftSettings

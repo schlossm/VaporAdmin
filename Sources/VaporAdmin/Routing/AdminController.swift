@@ -1,6 +1,6 @@
 //
 //  AdminController.swift
-//  mascomputech
+//  VaporAdmin
 //
 //  Created by Michael Schloss on 2/1/26.
 //
@@ -11,13 +11,13 @@ import Passage
 import Fluent
 import Vapor
 
-final class AdminController : RouteCollection, Sendable
+final class AdminController<UserModel : Authenticatable & Sendable> : RouteCollection, Sendable
 {
-    private let databaseManager : ModelCoordinator
+    private let coordinator : ModelCoordinator
     
     init(app: Application)
     {
-        databaseManager = app.admin.databaseManager
+        coordinator = app.admin.databaseManager
     }
     
     func boot(routes: any RoutesBuilder) throws
@@ -27,7 +27,7 @@ final class AdminController : RouteCollection, Sendable
         let protected = routes.grouped("admin")
             .grouped(PassageSessionAuthenticator())
             .grouped(PassageBearerAuthenticator())
-            .grouped(PassageFluent.UserModel.redirectMiddleware(path: "/admin/login?loginRequired=true"))
+            .grouped(UserModel.redirectMiddleware(path: "/admin/login?loginRequired=true"))
             .grouped(PassageGuard())
         
         protected.get { req in
@@ -106,14 +106,14 @@ final class AdminController : RouteCollection, Sendable
     {
         let username = try request.passage.user.username!
         
-        let adminRootContext = AdminContext.Root(header: .init(username: username, breadcrumbs: [.init(text: "Admin Panel", relativeHREF: "", isActive: true)]), modelNames: databaseManager.listModels())
+        let adminRootContext = AdminContext.Root(header: .init(username: username, breadcrumbs: [.init(text: "Admin Panel", relativeHREF: "", isActive: true)]), modelNames: coordinator.listModels())
         return try await request.view.render("admin-root", adminRootContext)
     }
     
     private func modelEntryListView(model: String, request: Request) async throws -> View
     {
         let username = try request.passage.user.username!
-        let entries = try await databaseManager.listEntries(for: model)
+        let entries = try await coordinator.listEntries(for: model)
         
         let adminEntryListContext = AdminContext.List(header: .init(username: username,
                                                                     breadcrumbs: [
@@ -128,7 +128,7 @@ final class AdminController : RouteCollection, Sendable
     private func modelEntryDetailView(model: String, parameters: Parameters, request: Request) async throws -> View
     {
         let username = try request.passage.user.username!
-        let details = try await databaseManager.details(for: parameters, model: model)
+        let details = try await coordinator.details(for: parameters, model: model)
         let rawModels = details.properties
         
         let adminEntryDetailContext = AdminContext.Detail(header: .init(username: username,
@@ -148,14 +148,14 @@ final class AdminController : RouteCollection, Sendable
     {
         _ = try request.passage.user
         
-        try await databaseManager.attemptUpdate(for: parameters, model: model, data: request.content)
+        try await coordinator.attemptUpdate(for: parameters, model: model, data: request.content)
         return .init(status: .ok)
     }
     
     private func modelEntryCreateView(model: String, request: Request) async throws -> View
     {
         let username = try request.passage.user.username!
-        let details = try await databaseManager.newModelInfo(for: model)
+        let details = try await coordinator.newModelInfo(for: model)
         
         let adminEntryDetailContext = AdminContext.Detail.Create(header: .init(username: username,
                                                                                breadcrumbs: [
@@ -171,32 +171,24 @@ final class AdminController : RouteCollection, Sendable
     private func modelEntryCreateSave(model: String, request: Request) async throws -> Response
     {
         _ = try request.passage.user
-        try await databaseManager.attemptCreate(for: model, data: request.content)
-        struct Redirect : Codable
-        {
-            let redirect : String
-            
-            init(model: String)
-            {
-                redirect = "/admin/models/\(model)/"
-            }
-        }
+        try await coordinator.attemptCreate(for: model, data: request.content)
         return .init(body: .init(data: try JSONEncoder().encode(Redirect(model: model))))
     }
     
     private func modelEntryDelete(model: String, parameters: Parameters, request: Request) async throws -> Response
     {
         _ = try request.passage.user
-        try await databaseManager.attemptDelete(for: model, parameters: parameters)
-        struct Redirect : Codable
-        {
-            let redirect : String
-            
-            init(model: String)
-            {
-                redirect = "/admin/models/\(model)/"
-            }
-        }
+        try await coordinator.attemptDelete(for: model, parameters: parameters)
         return .init(body: .init(data: try JSONEncoder().encode(Redirect(model: model))))
+    }
+}
+
+private struct Redirect : Codable
+{
+    let redirect : String
+    
+    init(model: String)
+    {
+        redirect = "/admin/models/\(model)/"
     }
 }

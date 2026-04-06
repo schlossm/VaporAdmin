@@ -50,7 +50,12 @@ extension Model where Self : FluentAdminDisplay
         {
             let key = property.name
             var value = (self[keyPath: property.fluentKeypath] as! any Property).value
-            let propertyType = type(of: property.dataKeypath).valueType
+            var propertyType = type(of: property.dataKeypath).valueType
+            
+            if let optionalProperty = propertyType as? OptionalProtocol.Type
+            {
+                propertyType = optionalProperty.wrappedType()
+            }
             
             let fieldType : ModelInstancePropertyRepresentation.FieldType
             if propertyType is any BinaryInteger.Type || propertyType is any FloatingPoint.Type
@@ -91,7 +96,13 @@ extension Model where Self : FluentAdminDisplay
         for property in Self.adminMetadata.filter({ !($0.metadata is IDProperty) })
         {
             guard let update = data[property.name] else { continue }
-            let rawPropertyType = type(of: property.dataKeypath).valueType
+            var rawPropertyType = type(of: property.dataKeypath).valueType
+            
+            if let optionalProperty = rawPropertyType as? OptionalProtocol.Type
+            {
+                rawPropertyType = optionalProperty.wrappedType()
+            }
+            
             let propertyType = rawPropertyType as! any Decodable.Type
             
             if let relationship = property.metadata as? any RelationshipProperty // We have a relationship, do something
@@ -113,7 +124,7 @@ extension Model where Self : FluentAdminDisplay
                 
                 func write<T : Decodable>(value: T)
                 {
-                    self[keyPath: property.dataKeypath as! ReferenceWritableKeyPath] = value
+                    self[keyPath: property.dataKeypath as! ReferenceWritableKeyPath] = value as T?
                 }
                 write(value: value)
                 

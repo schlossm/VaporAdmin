@@ -23,7 +23,7 @@ protocol ModelBox
     func attemptDelete(parameters: Parameters) async throws
 }
 
-struct _ModelBox<ModelType : FluentAdminDisplay & Model> : ModelBox
+struct _ModelBox<ModelType : AdminModel> : ModelBox
 {
     typealias IDValue = ModelType.IDValue
     
@@ -68,8 +68,9 @@ struct _ModelBox<ModelType : FluentAdminDisplay & Model> : ModelBox
     func attemptCreate(data: any ContentContainer) async throws
     {
         // To work around a Swift crash when keypath sets access the getters, we need to try a raw decode to the type first, then update any "weird" properties that can't be represented by the JS form data
-        let newModel = try data.decode(ModelType.self)
+        let newModel = ModelType() // try data.decode(ModelType.self)
         let data = try data.decode([String : String].self)
+        guard !data.isEmpty else { throw AdminError.invalidInput }
         try await newModel.updateFields(from: data, database: database)
     }
     

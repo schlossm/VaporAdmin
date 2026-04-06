@@ -82,7 +82,7 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
             // 3.
             let metadataDefinition = fluentMetadata.definition?(className.description, typeSyntax)
             metadataExprSyntax.append("""
-            VaporAdmin.PropertyMetadata(name: "\(raw: identifierName)", fluentKeypath: \\\(className).$\(identifier), dataKeypath: \\\(className).\(identifier), metadata: \(raw: metadataDefinition ?? "nil"))
+            VaporAdmin.PropertyMetadata(name: "\(raw: identifierName)", fluentKeypath: \\\(className).$\(identifier), dataKeypath: \\\(className).$\(identifier).value, metadata: \(raw: metadataDefinition ?? "nil"))
             """)
         }
         // Add a newline to the end of the last expression syntax

@@ -182,4 +182,26 @@ struct ModelAdminTests
         #expect(model.$parent.id == nil)
         #expect(model.parent == nil)
     }
+    
+    @Test("updateFields(from:database:) create if new")
+    func updateFieldsCreateIfNew() async throws
+    {
+        let database = CallbackTestDatabase { query in
+            switch query.action
+            {
+            case .create:
+                break
+                        
+            default: Issue.record("Expected .update, received query \(query)")
+            }
+            return []
+        }
+        
+        let model = TestModelOptionalParentRelationshipChild(id: nil, name: "test", bar: 1)
+        
+        // Set a relationship first, we'll immediately nil it out after
+        try await model.updateFields(from: ["parent_id": "01020304-0506-0708-090A-0B0C0D0E0F04"], database: database.db)
+        
+        #expect(model.id != nil)
+    }
 }

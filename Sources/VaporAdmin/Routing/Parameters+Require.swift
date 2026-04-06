@@ -1,5 +1,5 @@
 //
-//  Request+Parameters.swift
+//  Parameters+Require.swift
 //  VaporAdmin
 //
 //  Created by Michael Schloss on 4/2/26.
@@ -16,7 +16,7 @@ extension Parameters
     /// - parameters:
     ///     - name: The name of the parameter.
     ///     - type: The required parameter value type.
-    public func require<T>(_ name: String, as type: T.Type = T.self) throws -> T
+    func require<T>(_ name: String, as type: T.Type = T.self) throws -> T
     {
         guard let stringValue : String = get(name) else
         {
@@ -37,7 +37,7 @@ extension Parameters
         {
             guard let value = type.init(rawValue: stringValue) else
             {
-                self.logger.debug("The parameter \(stringValue) could not be converted to \(T.Type.self)")
+                self.logger.debug("The parameter \(stringValue) could not be represented by \(T.Type.self)")
                 throw Abort(.unprocessableEntity, reason: "The parameter value could not be converted to the required type")
             }
             return value as! T

@@ -8,6 +8,7 @@
 import Foundation
 import VaporAdmin
 import Fluent
+import Vapor
 
 // MARK: - Basic
 
@@ -31,7 +32,7 @@ final class TestModel : Model, @unchecked Sendable
     @Field(key: "bar")
     var bar : Int
     
-    @Field(key: "enum")
+    @Enum(key: "enum")
     var modelEnum : TestModelEnum
     
     required init() {}
@@ -88,13 +89,13 @@ final class TestModelCustomAdminDisplayable : Model, @unchecked Sendable, Custom
 {
     static let schema = "test_models"
     
-    @ID(key: .id)
+    @ID(custom: "id")
     var id : UUID?
     
     @Field(key: "name")
     var name : String
     
-    @Field(key: "bar")
+    @Field(key: "bar_blah")
     var bar : Int
     
     var displayString : String { name }
@@ -163,5 +164,32 @@ final class TestModelOptionalParentRelationshipChild : Model, @unchecked Sendabl
         self.name = name
         self.bar = bar
         self.modelEnum = modelEnum
+    }
+}
+
+// MARK: - ContentContainer
+
+struct TestContentContainer : ContentContainer
+{
+    var body : ByteBuffer
+    var headers : HTTPHeaders
+
+    var contentType : HTTPMediaType? { self.headers.contentType }
+
+    mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable
+    {
+        try encoder.encode(encodable, to: &self.body, headers: &self.headers)
+    }
+
+    func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable
+    {
+        try decoder.decode(D.self, from: body, headers: headers)
+    }
+
+    mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content
+    {
+        var content = content
+        try content.beforeEncode()
+        try encoder.encode(content, to: &self.body, headers: &self.headers)
     }
 }
