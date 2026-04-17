@@ -1,5 +1,5 @@
 #extend("admin-base"):
-    #export("head-extras"): <script src="/adminDetail.js"></script> #endexport
+    #export("head-extras"): <script src="/admin/static/adminDetail.js"></script> #endexport
     #export("title"): Admin / #(modelName) / #(entryID) #endexport
     #export("admin-body"):
         <div class="list-group mt-1">
@@ -10,13 +10,15 @@
                 <form id="entryDetailForm">
                     #for(field in fields):
                         <div class="col mb-3">
-                            <label for="#(field.key)" class="form-label">#(field.key)</label>
-                            #if(field.fieldType.number):
-                                <input class="form-control" type="number" id="#(field.key)" name="#(field.key)" min="0" value="#(field.value)">
+                            <label for="#(field.key)" class="form-label">#(field.key)#if(!field.fieldType.optional): (Required) #endif</label>
+                            #if(field.fieldType.bool):
+                                <input type="checkbox" name="#(field.key)" id="#(field.key)">
+                            #elseif(field.fieldType.number):
+                                <input class="form-control" type="number" id="#(field.key)" name="#(field.key)" min="0" value="#(field.value)" #if(!field.fieldType.optional): required #endif>
                             #elseif(field.fieldType.text):
-                                <textarea class="form-control" id="#(field.key)" name="#(field.key)">#(field.value)</textarea>
+                                <textarea class="form-control" id="#(field.key)" name="#(field.key)" #if(!field.fieldType.optional): required #endif>#(field.value)</textarea>
                             #elseif(field.fieldType.relationship):
-                                <select class="form-select" id="#(field.key)" name="#(field.key)">
+                                <select class="form-select" id="#(field.key)" name="#(field.key)" #if(!field.fieldType.optional): required #endif>
                                     #if(field.fieldType.relationship.optional):
                                         <option #if(field.value == ""): selected #endif value> -- No Relationship -- </option>
                                     #endif
@@ -29,7 +31,7 @@
                                     #endfor
                                 </select>
                             #else:
-                                <select class="form-select" id="#(field.key)" name="#(field.key)">
+                                <select class="form-select" id="#(field.key)" name="#(field.key)" #if(!field.fieldType.optional): required #endif>
                                     #for(possibleValue in field.fieldType.array.possibleValues):
                                         #if(possibleValue == field.value):
                                             <option selected value="#(possibleValue)">#(possibleValue)</option>

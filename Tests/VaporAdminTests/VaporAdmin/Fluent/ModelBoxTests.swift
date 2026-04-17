@@ -66,8 +66,8 @@ struct ModelBoxTests
         #expect(output.id == "00010203-0405-0607-0809-0A0B0C0D0E0F")
         #expect(output.description == "test1")
         #expect(output.properties == [
-            .init(key: "name", value: "test1", fieldType: .text),
-            .init(key: "bar_blah", value: "1", fieldType: .number)
+            .init(key: "name", value: "test1", fieldType: .text, optional: false, isMultiSelect: false),
+            .init(key: "bar_blah", value: "1", fieldType: .number, optional: false, isMultiSelect: false)
         ])
     }
     
@@ -156,7 +156,7 @@ struct ModelBoxTests
             return []
         }
         
-        var parameters = Parameters()
+        let parameters = Parameters()
         let modelBox = _ModelBox<TestModelCustomAdminDisplayable>(database: database.db)
         
         let updates = ["name": "test2"]

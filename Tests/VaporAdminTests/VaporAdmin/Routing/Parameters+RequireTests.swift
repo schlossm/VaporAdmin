@@ -9,7 +9,7 @@
 import Testing
 import Vapor
 
-@Suite("Parameters+Require.swift")
+@Suite("Parameters+Require.swift Tests")
 struct ParametersRequireTests
 {
     @Test("require(_:as:) fails on missing param")
@@ -24,7 +24,7 @@ struct ParametersRequireTests
             #expect(error.reason == "The parameter provided does not exist")
         }
         
-        try testDecode(String.self, from: .init())
+        try testDecode(String.self, from: makeParameters())
     }
     
     @Test("require(_:as:) LosslessStringConvertible")
@@ -35,7 +35,7 @@ struct ParametersRequireTests
             try #expect(parameters.require("test", as: IDValue.self) as? String == "test_param")
         }
         
-        var parameters = Parameters()
+        var parameters = makeParameters()
         parameters.set("test", to: "test_param")
         try testDecode(String.self, from: parameters)
     }
@@ -52,7 +52,7 @@ struct ParametersRequireTests
             #expect(error.reason == "The parameter value could not be converted to the required type")
         }
         
-        var parameters = Parameters()
+        var parameters = makeParameters()
         parameters.set("test", to: "test_param")
         try testDecode(UUID.self, from: parameters)
     }
@@ -65,7 +65,7 @@ struct ParametersRequireTests
             case foo = "test_param"
             case bar
         }
-        var parameters = Parameters()
+        var parameters = makeParameters()
         parameters.set("test", to: "test_param")
         
         try #expect(parameters.require("test", as: TestEnum.self) == .foo)
@@ -79,7 +79,7 @@ struct ParametersRequireTests
             case foo = "test_param"
             case bar
         }
-        var parameters = Parameters()
+        var parameters = makeParameters()
         parameters.set("test", to: "test")
         
         let error = try #require(throws: Abort.self) {
@@ -97,7 +97,7 @@ struct ParametersRequireTests
             case foo
             case bar
         }
-        var parameters = Parameters()
+        var parameters = makeParameters()
         parameters.set("test", to: "test_param")
         
         let error = try #require(throws: Abort.self) {
@@ -105,5 +105,12 @@ struct ParametersRequireTests
         }
         #expect(error.status == .unprocessableEntity)
         #expect(error.reason == "The parameter value could not be converted from a string.  Ensure your type conforms to `LosslessStringConvertible` or `RawRepresentable<String>`")
+    }
+    
+    private func makeParameters() -> Parameters
+    {
+        var logger = Logger(label: "com.michaelschloss.VaporAdmin.test")
+        logger.logLevel = .debug
+        return Parameters(logger)
     }
 }

@@ -73,31 +73,24 @@ final class AdminController<UserModel : Authenticatable & Sendable> : RouteColle
     
     private func registerJSFiles(on routes: any RoutesBuilder)
     {
-        routes.get("adminTheme.js") { (request: Request) in
-            guard let resourcePath = Bundle.module.path(forResource: "adminTheme", ofType: "js", inDirectory: "Public") else {
-                return Response(status: .notFound)
-            }
+        let staticGroup = routes.grouped("admin", "static")
+        staticGroup.get("adminTheme.js") { (request: Request) in
+            let resourcePath = Bundle.module.path(forResource: "adminTheme", ofType: "js", inDirectory: "Public")!
             return try await request.fileio.asyncStreamFile(at: resourcePath)
         }
         
-        routes.get("adminCreate.js") { (request: Request) in
-            guard let resourcePath = Bundle.module.path(forResource: "adminCreate", ofType: "js", inDirectory: "Public") else {
-                return Response(status: .notFound)
-            }
+        staticGroup.get("adminCreate.js") { (request: Request) in
+            let resourcePath = Bundle.module.path(forResource: "adminCreate", ofType: "js", inDirectory: "Public")!
             return try await request.fileio.asyncStreamFile(at: resourcePath)
         }
         
-        routes.get("adminDetail.js") { (request: Request) in
-            guard let resourcePath = Bundle.module.path(forResource: "adminDetail", ofType: "js", inDirectory: "Public") else {
-                return Response(status: .notFound)
-            }
+        staticGroup.get("adminDetail.js") { (request: Request) in
+            let resourcePath = Bundle.module.path(forResource: "adminDetail", ofType: "js", inDirectory: "Public")!
             return try await request.fileio.asyncStreamFile(at: resourcePath)
         }
         
-        routes.get("adminList.js") { (request: Request) in
-            guard let resourcePath = Bundle.module.path(forResource: "adminList", ofType: "js", inDirectory: "Public") else {
-                return Response(status: .notFound)
-            }
+        staticGroup.get("adminList.js") { (request: Request) in
+            let resourcePath = Bundle.module.path(forResource: "adminList", ofType: "js", inDirectory: "Public")!
             return try await request.fileio.asyncStreamFile(at: resourcePath)
         }
     }

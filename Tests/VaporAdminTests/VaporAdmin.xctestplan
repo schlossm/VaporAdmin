@@ -1,0 +1,33 @@
+{
+  "configurations" : [
+    {
+      "id" : "A03AD7E4-1880-4BF3-B3F6-56E4DCC9C251",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:",
+          "identifier" : "VaporAdmin",
+          "name" : "VaporAdmin"
+        }
+      ]
+    },
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "VaporAdminTests",
+        "name" : "VaporAdminTests"
+      }
+    }
+  ],
+  "version" : 1
+}

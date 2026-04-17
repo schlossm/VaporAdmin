@@ -84,9 +84,7 @@ public struct Admin : Sendable
     
     private func registerLeafTemplates(on app: Application) throws
     {
-        guard let resourcePath = Bundle.module.resourcePath else {
-            throw AdminError.unexpected(message: "Could not locate resource path for VaporAdmin module.")
-        }
+        let resourcePath = Bundle.module.resourcePath!
         let sources = app.leaf.sources
         try sources.register(
             source: "leaf",

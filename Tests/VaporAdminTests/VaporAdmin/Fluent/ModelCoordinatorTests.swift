@@ -24,13 +24,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -41,7 +41,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -73,13 +73,13 @@ struct ModelCoordinatorTests
             }
             class TestBox : ModelBox
             {
-                func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+                func instances() async throws -> [ModelInstanceRepresentation]
                 {
                     Issue.record("Unexpected call to \(#function)")
                     return []
                 }
                 
-                func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+                func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
                 {
                     Issue.record("Unexpected call to \(#function)")
                     return .init(id: "", description: "", properties: [])
@@ -90,7 +90,7 @@ struct ModelCoordinatorTests
                     Issue.record("Unexpected call to \(#function)")
                 }
                 
-                func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+                func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
                 {
                     Issue.record("Unexpected call to \(#function)")
                     return []
@@ -122,13 +122,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -139,7 +139,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -161,6 +161,55 @@ struct ModelCoordinatorTests
         #expect(coordinator.listModels() == ["TestModel"])
     }
     
+    @Test("Crashes on not-in-listModels")
+    func crashesOnNotInListModels() async
+    {
+        await #expect(processExitsWith: .failure) {
+            let database = CallbackTestDatabase { _ in
+                Issue.record("Unexpected call to database")
+                return []
+            }
+            class TestBox : ModelBox
+            {
+                func instances() async throws -> [ModelInstanceRepresentation]
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                    return []
+                }
+                
+                func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                    return .init(id: "", description: "", properties: [])
+                }
+                
+                func attemptUpdate(for parameters: RoutingKit.Parameters, data: any Vapor.ContentContainer) async throws
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                }
+                
+                func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                    return []
+                }
+                
+                func attemptCreate(data: any Vapor.ContentContainer) async throws
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                }
+                
+                func attemptDelete(parameters: RoutingKit.Parameters) async throws
+                {
+                    Issue.record("Unexpected call to \(#function)")
+                }
+            }
+            let coordinator = ModelCoordinator(database: database.db, boxInitializer: { _ in TestBox() })
+            coordinator.register(TestModel.self)
+            _ = try await coordinator.listEntries(for: "blah")
+        }
+    }
+    
     @Test("listEntries")
     func listEntries() async throws
     {
@@ -170,12 +219,12 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 [.init(id: "blah", description: "blah")]
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -186,7 +235,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -217,13 +266,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 return .init(id: "", description: "", properties: [])
             }
@@ -233,7 +282,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -264,13 +313,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -281,7 +330,7 @@ struct ModelCoordinatorTests
                 
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -312,13 +361,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -329,9 +378,9 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
-                return [.init(key: "test", value: "test2", fieldType: .text)]
+                return [.init(key: "test", value: "test2", fieldType: .text, optional: false, isMultiSelect: false)]
             }
             
             func attemptCreate(data: any Vapor.ContentContainer) async throws
@@ -347,7 +396,7 @@ struct ModelCoordinatorTests
         
         let coordinator = ModelCoordinator(database: database.db, boxInitializer: { _ in TestBox() })
         coordinator.register(TestModel.self)
-        try await #expect(coordinator.newModelInfo(for: "TestModel") == [.init(key: "test", value: "test2", fieldType: .text)])
+        try await #expect(coordinator.newModelInfo(for: "TestModel") == [.init(key: "test", value: "test2", fieldType: .text, optional: false, isMultiSelect: false)])
     }
     
     @Test("attemptCreate")
@@ -359,13 +408,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -376,7 +425,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
@@ -407,13 +456,13 @@ struct ModelCoordinatorTests
         }
         class TestBox : ModelBox
         {
-            func instances() async throws -> [VaporAdmin.ModelInstanceRepresentation]
+            func instances() async throws -> [ModelInstanceRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []
             }
             
-            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> VaporAdmin.ModelInstancePropertiesRepresentation
+            func instanceProperties(parameters: RoutingKit.Parameters) async throws -> ModelInstancePropertiesRepresentation
             {
                 Issue.record("Unexpected call to \(#function)")
                 return .init(id: "", description: "", properties: [])
@@ -424,7 +473,7 @@ struct ModelCoordinatorTests
                 Issue.record("Unexpected call to \(#function)")
             }
             
-            func newModelInfo() async throws -> [VaporAdmin.ModelInstancePropertyRepresentation]
+            func newModelInfo() async throws -> [ModelInstancePropertyRepresentation]
             {
                 Issue.record("Unexpected call to \(#function)")
                 return []

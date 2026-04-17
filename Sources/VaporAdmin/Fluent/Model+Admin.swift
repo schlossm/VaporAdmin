@@ -49,18 +49,43 @@ extension Model where Self : FluentAdminDisplay
         for property in Self.adminMetadata.filter({ !($0.metadata is IDProperty) })
         {
             let key = property.name
-            var value = (self[keyPath: property.fluentKeypath] as! any Property).value
+            var value : Any? = (self[keyPath: property.fluentKeypath] as! any Property).value
             var propertyType = type(of: property.dataKeypath).valueType
             
-            if let optionalProperty = propertyType as? OptionalProtocol.Type
+            let isOptional : Bool
+            let isMultiSelect : Bool
+            
+            if let metadata = property.metadata
+            {
+                isOptional = metadata.isOptional
+                isMultiSelect = metadata.isMultiRelationship
+            }
+            else
+            {
+                isOptional = false
+                isMultiSelect = false
+            }
+            
+            // unwrap all optionals to base type
+            while let optionalProperty = propertyType as? OptionalProtocol.Type
             {
                 propertyType = optionalProperty.wrappedType()
             }
+            
+            func unwrapGeneric<T>(value: Any?, type: T.Type) -> T?
+            {
+                return (value as? OptionalProtocol)?.getValue()
+            }
+            value = unwrapGeneric(value: value, type: propertyType)
             
             let fieldType : ModelInstancePropertyRepresentation.FieldType
             if propertyType is any BinaryInteger.Type || propertyType is any FloatingPoint.Type
             {
                 fieldType = .number
+            }
+            else if propertyType is Bool.Type
+            {
+                fieldType = .bool
             }
             else if propertyType is any (CaseIterable & RawRepresentable).Type
             {
@@ -70,8 +95,16 @@ extension Model where Self : FluentAdminDisplay
             }
             else if let metadata = property.metadata as? any RelationshipProperty
             {
-                value = metadata.getID(on: self, fluentKeypath: property.fluentKeypath)
-                fieldType = try await .relationship(optional: metadata.isOptional, possibleValues: metadata.getRelationshipModels(from: database))
+                let relationships = metadata.getCurrentRelationships(on: self, keypath: property.fluentKeypath)
+                if relationships.count == 1
+                {
+                    value = relationships[0]
+                }
+                else
+                {
+                    value = relationships.map { String(describing: $0) }
+                }
+                fieldType = try await .relationship(possibleValues: metadata.getPossibleRelationshipValues(from: database))
             }
             else
             {
@@ -80,11 +113,11 @@ extension Model where Self : FluentAdminDisplay
         
             if let value
             {
-                output.append(.init(key: key, value: String(describing: value), fieldType: fieldType))
+                output.append(.init(key: key, value: String(describing: value), fieldType: fieldType, optional: isOptional, isMultiSelect: isMultiSelect))
             }
             else
             {
-                output.append(.init(key: key, value: "", fieldType: fieldType))
+                output.append(.init(key: key, value: "", fieldType: fieldType, optional: isOptional, isMultiSelect: isMultiSelect))
             }
         }
         
@@ -107,15 +140,7 @@ extension Model where Self : FluentAdminDisplay
             
             if let relationship = property.metadata as? any RelationshipProperty // We have a relationship, do something
             {
-                if update.isEmpty
-                {
-                    relationship.nilOut(on: self, fluentKeypath: property.fluentKeypath)
-                }
-                else
-                {
-                    let data = try jsonEncoder.encode(EncodedData(field: update))
-                    try relationship.setNewEntry(from: data, decoder: jsonDecoder, fluentKeypath: property.fluentKeypath, on: self, from: database)
-                }
+                try relationship.process(update: update, on: self, keypath: property.fluentKeypath)
             }
             else // Simple set
             {

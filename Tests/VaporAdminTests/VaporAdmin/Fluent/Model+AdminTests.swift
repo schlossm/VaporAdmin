@@ -67,9 +67,9 @@ struct ModelAdminTests
     func adminFieldRepresentationsNoRelationshipsEnumNotCaseIterable() async throws
     {
         let expected = [
-            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text),
-            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number),
-            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .text)
+            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .text, optional: false, isMultiSelect: false)
         ]
         let model = TestModel(id: UUID(uuid: (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)), name: "test", bar: 1)
         let actual = try await model.adminFieldRepresentations(database: ArrayTestDatabase().db)
@@ -80,11 +80,13 @@ struct ModelAdminTests
     func adminFieldRepresentationsNoRelationshipsEnumIsCaseIterable() async throws
     {
         let expected = [
-            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text),
-            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number),
-            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .array(possibleValues: ["one", "two"]))
+            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number, optional: true, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "nonOptionalBool", value: "true", fieldType: .bool, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "optionalBool", value: "", fieldType: .bool, optional: true, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .array(possibleValues: ["one", "two"]), optional: false, isMultiSelect: false)
         ]
-        let model = TestModelCaseIterable(id: UUID(uuid: (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)), name: "test", bar: 1)
+        let model = TestModelCaseIterable(id: UUID(uuid: (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)), name: "test", bar: 1, nonOptionalBool: true, optionalBool: nil)
         let actual = try await model.adminFieldRepresentations(database: ArrayTestDatabase().db)
         #expect(actual == expected)
     }
@@ -93,12 +95,13 @@ struct ModelAdminTests
     func adminFieldRepresentationsWithOptionalParentRelationship() async throws
     {
         let expected = [
-            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text),
-            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number),
-            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .text),
-            ModelInstancePropertyRepresentation(key: "parent_id", value: "", fieldType: .relationship(optional: true, possibleValues: [.init(displayName: "test parent", id: "01020304-0506-0708-090A-0B0C0D0E0F04")]))
+            ModelInstancePropertyRepresentation(key: "name", value: "test", fieldType: .text, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "bar", value: "1", fieldType: .number, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "enum", value: "one", fieldType: .text, optional: false, isMultiSelect: false),
+            ModelInstancePropertyRepresentation(key: "parent_id", value: "01020304-0506-0708-090A-0B0C0D0E0F04", fieldType: .relationship(possibleValues: [.init(displayName: "test parent", id: "01020304-0506-0708-090A-0B0C0D0E0F04")]), optional: true, isMultiSelect: false)
         ]
         let model = TestModelOptionalParentRelationshipChild(id: UUID(uuid: (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)), name: "test", bar: 1)
+        model.$parent.id = UUID(uuid: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 4))
         
         let testDatabase = CallbackTestDatabase { _ in
             return [TestOutput(TestModelOptionalParentRelationshipChildParent(id: UUID(uuid: (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 4)), name: "test parent"))]

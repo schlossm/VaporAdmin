@@ -12,7 +12,7 @@ public protocol FluentAdminDisplay
 public protocol FluentPropertyMetadata
 {
     var isOptional : Bool { get }
-    var isRelationship : Bool { get }
+    var isMultiRelationship : Bool { get }
 }
 
 /// Metadata that describes each Fluent property
@@ -36,7 +36,7 @@ public struct PropertyMetadata<T>
 public struct IDProperty : FluentPropertyMetadata
 {
     public let isOptional = false
-    public let isRelationship = false
+    public let isMultiRelationship = false
     
     public init() {}
 }
@@ -45,7 +45,7 @@ public struct IDProperty : FluentPropertyMetadata
 public struct OptionalProperty : FluentPropertyMetadata
 {
     public let isOptional = true
-    public let isRelationship = false
+    public let isMultiRelationship = false
     
     public init() {}
 }
@@ -55,34 +55,52 @@ protocol RelationshipProperty : FluentPropertyMetadata
     associatedtype RelationshipModel : Model
     associatedtype BaseModel : Model
     
-    func getRelationshipModels(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
-    
-    func nilOut<T: Model>(on model: T, fluentKeypath: AnyKeyPath)
-    func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> RelationshipModel.IDValue?
-    func setNewEntry<T: Model>(from data: Data, decoder: JSONDecoder, fluentKeypath: AnyKeyPath, on model: T, from database: Database) throws
+    func process<T : Model>(update: String, on model: T, keypath: AnyKeyPath) throws
+    func getCurrentRelationships<T : Model>(on model: T, keypath: AnyKeyPath) -> [RelationshipModel.IDValue]
+    func getPossibleRelationshipValues(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
 }
 
-/// Describes a Fluent Relationship property
-public struct NonOptionalRelationshipProperty<BaseModel : Model, RelationshipModel : Model> : RelationshipProperty where RelationshipModel.IDValue == UUID
-{
-    public let isOptional = false
-    public let isRelationship = true
-    
-    public init() {}
-}
-
-/// Describes a Fluent `Optional<Relationship>` property
-public struct OptionalRelationshipProperty<BaseModel : Model, RelationshipModel : Model> : RelationshipProperty where RelationshipModel.IDValue == UUID
+/// Describes a Fluent `OptionalParent` property
+public struct OptionalParentRelationshipProperty<BaseModel : Model, RelationshipModel : Model> : RelationshipProperty
 {
     public let isOptional = true
-    public let isRelationship = true
+    public let isMultiRelationship = false
     
     public init() {}
-}
-
-extension RelationshipProperty
-{
-    func getRelationshipModels(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
+    
+    private func ensureKeyPathIsCorrect(keypath: AnyKeyPath) -> KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
+    {
+        guard let keyPath = keypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>> else
+        {
+            preconditionFailure("Internal error -- invalid keypath")
+        }
+        return keyPath
+    }
+    
+    func process<T : Model>(update: String, on model: T, keypath: AnyKeyPath) throws
+    {
+        let keyPath = ensureKeyPathIsCorrect(keypath: keypath)
+        let model = model as! BaseModel
+        if update.isEmpty
+        {
+            model[keyPath: keyPath].id = nil
+        }
+        else
+        {
+            let data = try JSONEncoder().encode(EncodedData(field: update))
+            let id = try JSONDecoder().decode(DecodedData<RelationshipModel.IDValue>.self, from: data).field
+            model[keyPath: keyPath].id = id
+        }
+    }
+    
+    func getCurrentRelationships<T : Model>(on model: T, keypath: AnyKeyPath) -> [RelationshipModel.IDValue]
+    {
+        let keyPath = ensureKeyPathIsCorrect(keypath: keypath)
+        let model = model as! BaseModel
+        return model[keyPath: keyPath].id.map { [$0] } ?? []
+    }
+    
+    func getPossibleRelationshipValues(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
     {
         let values = try await database.query(RelationshipModel.self).all()
         return values.compactMap
@@ -91,33 +109,49 @@ extension RelationshipProperty
             return ModelInstancePropertyRepresentation.Relationship(displayName: value.adminDescription, id: String(describing: id))
         }
     }
+}
+
+/// Describes a Fluent `Parent` property
+public struct ParentRelationshipProperty<BaseModel : Model, RelationshipModel : Model> : RelationshipProperty
+{
+    public let isOptional = false
+    public let isMultiRelationship = false
     
-    func nilOut<T: Model>(on model: T, fluentKeypath: AnyKeyPath)
+    public init() {}
+    
+    private func ensureKeyPathIsCorrect(keypath: AnyKeyPath) -> KeyPath<BaseModel, ParentProperty<BaseModel, RelationshipModel>>
     {
-        let model = model as! BaseModel
-        if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
+        guard let keyPath = keypath as? KeyPath<BaseModel, ParentProperty<BaseModel, RelationshipModel>> else
         {
-            model[keyPath: keypath].id = nil
+            preconditionFailure("Internal error -- invalid keypath")
         }
+        return keyPath
     }
     
-    func getID<T: Model>(on model: T, fluentKeypath: AnyKeyPath) -> RelationshipModel.IDValue?
+    func process<T : Model>(update: String, on model: T, keypath: AnyKeyPath) throws
     {
+        let keyPath = ensureKeyPathIsCorrect(keypath: keypath)
         let model = model as! BaseModel
-        if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
-        {
-            return model[keyPath: keypath].id
-        }
-        return nil
+        guard !update.isEmpty else { throw AdminError.invalidInput }
+        let data = try JSONEncoder().encode(EncodedData(field: update))
+        let id = try JSONDecoder().decode(DecodedData<RelationshipModel.IDValue>.self, from: data).field
+        model[keyPath: keyPath].id = id
     }
     
-    func setNewEntry<T: Model>(from data: Data, decoder: JSONDecoder, fluentKeypath: AnyKeyPath, on model: T, from database: Database) throws
+    func getCurrentRelationships<T : Model>(on model: T, keypath: AnyKeyPath) -> [RelationshipModel.IDValue]
     {
-        let id = try decoder.decode(DecodedData<RelationshipModel.IDValue>.self, from: data).field
+        let keyPath = ensureKeyPathIsCorrect(keypath: keypath)
         let model = model as! BaseModel
-        if let keypath = fluentKeypath as? KeyPath<BaseModel, OptionalParentProperty<BaseModel, RelationshipModel>>
-        {
-            model[keyPath: keypath].id = id
+        return [model[keyPath: keyPath].id]
+    }
+    
+    func getPossibleRelationshipValues(from database: Database) async throws -> [ModelInstancePropertyRepresentation.Relationship]
+    {
+        let values = try await database.query(RelationshipModel.self).all()
+        return values.compactMap
+        { value -> ModelInstancePropertyRepresentation.Relationship? in
+            guard let id = value.id else { return nil }
+            return ModelInstancePropertyRepresentation.Relationship(displayName: value.adminDescription, id: String(describing: id))
         }
     }
 }

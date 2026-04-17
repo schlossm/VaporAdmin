@@ -1,5 +1,5 @@
 #extend("admin-base"):
-    #export("head-extras"): <script src="/adminList.js"></script> #endexport
+    #export("head-extras"): <script src="/admin/static/adminList.js"></script> #endexport
     #export("title"): Admin / #(modelName) #endexport
     #export("admin-body"):
         <div class="list-group mt-1">

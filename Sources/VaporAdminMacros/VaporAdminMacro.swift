@@ -8,13 +8,13 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
 {
     private struct Error : DiagnosticMessage, Swift.Error
     {
-        var message: String
+        var message : String
         
-        var diagnosticID: SwiftDiagnostics.MessageID
+        var diagnosticID : SwiftDiagnostics.MessageID
         
-        var severity: SwiftDiagnostics.DiagnosticSeverity
+        var severity : SwiftDiagnostics.DiagnosticSeverity
         
-        static let notAClass = Error(message: "@AdminDisplayable can only be applied to a class", diagnosticID: .init(domain: "com.michaelschloss.vaporadminmacro", id: "NotAClass"), severity: .error)
+        static let notAClass = Error(message: "@AdminDisplayable can only be applied to a class", diagnosticID: .init(domain: "com.michaelschloss.VaporAdmin.Macro", id: "NotAClass"), severity: .error)
         
         init(message: String, diagnosticID: SwiftDiagnostics.MessageID, severity: SwiftDiagnostics.DiagnosticSeverity)
         {
@@ -26,7 +26,7 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
         init(message: String)
         {
             self.message = message
-            self.diagnosticID = .init(domain: "com.michaelschloss.vaporadminmacro", id: "Generic")
+            self.diagnosticID = .init(domain: "com.michaelschloss.VaporAdmin.Macro", id: "Generic")
             self.severity = .error
         }
     }
@@ -65,7 +65,8 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
             guard let variableSyntax = member.decl.as(VariableDeclSyntax.self),
                   let fluentMetadata = variableSyntax.fluentPropertyWrapperMetadata,
                   let identifier = variableSyntax.identifier?.trimmed,
-                  let typeSyntax = variableSyntax.unwrappedType?.trimmed.description else {
+                  let typeSyntax = variableSyntax.unwrappedType?.trimmed.description else
+            {
                 continue
             }
             
@@ -91,7 +92,7 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
         let syntax = VariableDeclSyntax(modifiers: modifierSyntax,
                                         bindingSpecifier: .keyword(.var),
                                         bindings: [
-                                            PatternBindingSyntax(pattern: IdentifierPatternSyntax(identifier: .identifier("adminMetadata")),
+                                            PatternBindingSyntax(pattern: IdentifierPatternSyntax(identifier: .identifier("adminMetadata")).with(\.trailingTrivia, .space),
                                                                  typeAnnotation: typeAnnotation(for: className),
                                                                  accessorBlock: accessorBlock(metadataExprSyntax: metadataExprSyntax))
                                         ])
@@ -104,7 +105,7 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
                                  conformingTo protocols: [TypeSyntax],
                                  in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax]
     {
-        let decl: DeclSyntax = """
+        let decl : DeclSyntax = """
         extension \(raw: type.trimmedDescription) : FluentAdminDisplay {}
         """
         let ext = decl.cast(ExtensionDeclSyntax.self)
@@ -128,7 +129,7 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
         let formattedMetadata = metadataExprSyntax.map { $0.with(\.leadingTrivia, .newline) }
         let codeBlockSyntax = CodeBlockItemSyntax(item: .init(ArrayExprSyntax(elements: .init(expressions: formattedMetadata))))
         
-        return .init(leftBrace: .leftBraceToken(),
+        return .init(leftBrace: .leftBraceToken().with(\.leadingTrivia, .newline),
                      accessors: .getter([codeBlockSyntax]),
                      rightBrace: .rightBraceToken())
     }
@@ -138,16 +139,15 @@ public struct AdminDisplayableMacro : MemberMacro, ExtensionMacro
         let typeSyntax = ArrayTypeSyntax(leftSquare: .leftSquareToken(),
                                          element: memberSyntax(for: className),
                                          rightSquare: .rightSquareToken())
-        return .init(colon: .colonToken(),
-                     type: typeSyntax)
+        return .init(colon: .colonToken(), type: typeSyntax)
     }
 }
 
 private extension VariableDeclSyntax
 {
-    var identifierPattern: IdentifierPatternSyntax? { bindings.first?.pattern.as(IdentifierPatternSyntax.self) }
+    var identifierPattern : IdentifierPatternSyntax? { bindings.first?.pattern.as(IdentifierPatternSyntax.self) }
     
-    var identifier: TokenSyntax? { identifierPattern?.identifier }
+    var identifier : TokenSyntax? { identifierPattern?.identifier }
     
     var unwrappedType : TypeSyntax?
     {
@@ -164,8 +164,7 @@ private extension VariableDeclSyntax
 }
 
 @main
-struct VaporAdminMacroPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        AdminDisplayableMacro.self
-    ]
+struct VaporAdminMacroPlugin : CompilerPlugin
+{
+    let providingMacros : [Macro.Type] = [AdminDisplayableMacro.self]
 }

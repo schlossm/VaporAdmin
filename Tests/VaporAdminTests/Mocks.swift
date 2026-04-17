@@ -65,20 +65,28 @@ final class TestModelCaseIterable : Model, @unchecked Sendable
     @Field(key: "name")
     var name : String
     
-    @Field(key: "bar")
-    var bar : Int
+    @OptionalField(key: "bar")
+    var bar : Int?
+    
+    @Boolean(key: "nonOptionalBool")
+    var nonOptionalBool : Bool
+    
+    @OptionalBoolean(key: "optionalBool")
+    var optionalBool : Bool?
     
     @Field(key: "enum")
     var modelEnum : TestModelEnumCaseIterable
     
     required init() {}
     
-    init(id: UUID? = nil, name: String, bar: Int, modelEnum: TestModelEnumCaseIterable = .one)
+    init(id: UUID? = nil, name: String, bar: Int?, nonOptionalBool: Bool, optionalBool: Bool?, modelEnum: TestModelEnumCaseIterable = .one)
     {
         self.id = id
         self.name = name
         self.bar = bar
         self.modelEnum = modelEnum
+        self.nonOptionalBool = nonOptionalBool
+        self.optionalBool = optionalBool
     }
 }
 
@@ -155,6 +163,37 @@ final class TestModelOptionalParentRelationshipChild : Model, @unchecked Sendabl
     
     @OptionalParent(key: "parent_id")
     var parent : TestModelOptionalParentRelationshipChildParent?
+    
+    required init() {}
+    
+    init(id: UUID? = nil, name: String, bar: Int, modelEnum: TestModelEnum = .one)
+    {
+        self.id = id
+        self.name = name
+        self.bar = bar
+        self.modelEnum = modelEnum
+    }
+}
+
+@AdminDisplayable
+final class TestModelParentRelationshipChild : Model, @unchecked Sendable
+{
+    static let schema = "test_models"
+    
+    @ID(key: .id)
+    var id : UUID?
+    
+    @Field(key: "name")
+    var name : String
+    
+    @Field(key: "bar")
+    var bar : Int
+    
+    @Field(key: "enum")
+    var modelEnum : TestModelEnum
+    
+    @Parent(key: "parent_id")
+    var parent : TestModelOptionalParentRelationshipChildParent
     
     required init() {}
     

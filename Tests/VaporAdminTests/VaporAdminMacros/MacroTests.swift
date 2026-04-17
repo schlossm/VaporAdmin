@@ -30,6 +30,9 @@ class VaporAdminMacroTests : XCTestCase
                 @OptionalParent(key: "bar")
                 var bar : Bar?
             
+                @Parent(key: "required_bar")
+                var bar2 : Bar
+            
                 var foo : Int
                 
                 required init() { }
@@ -48,15 +51,20 @@ class VaporAdminMacroTests : XCTestCase
                 @OptionalParent(key: "bar")
                 var bar : Bar?
             
+                @Parent(key: "required_bar")
+                var bar2 : Bar
+            
                 var foo : Int
                 
                 required init() { }
             
-                static var adminMetadata: [VaporAdmin.PropertyMetadata<Foo>] {
+                static var adminMetadata : [VaporAdmin.PropertyMetadata<Foo>]
+                {
                     [
                         VaporAdmin.PropertyMetadata(name: "id", fluentKeypath: \\Foo.$id, dataKeypath: \\Foo.$id.value, metadata: VaporAdmin.IDProperty()),
                         VaporAdmin.PropertyMetadata(name: "name", fluentKeypath: \\Foo.$name, dataKeypath: \\Foo.$name.value, metadata: nil),
-                        VaporAdmin.PropertyMetadata(name: "bar", fluentKeypath: \\Foo.$bar, dataKeypath: \\Foo.$bar.value, metadata: VaporAdmin.OptionalRelationshipProperty<Foo, Bar>())
+                        VaporAdmin.PropertyMetadata(name: "bar", fluentKeypath: \\Foo.$bar, dataKeypath: \\Foo.$bar.value, metadata: VaporAdmin.OptionalParentRelationshipProperty<Foo, Bar>()),
+                        VaporAdmin.PropertyMetadata(name: "required_bar", fluentKeypath: \\Foo.$bar2, dataKeypath: \\Foo.$bar2.value, metadata: VaporAdmin.ParentRelationshipProperty<Foo, Bar>())
                     ]
                 }
             }

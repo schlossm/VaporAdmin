@@ -15,15 +15,19 @@ struct ModelInstancePropertyRepresentation : Codable, Equatable
     
     enum FieldType : Codable, Equatable
     {
+        case bool
         case text
         case number
         case array(possibleValues: [String])
-        case relationship(optional: Bool, possibleValues: [Relationship])
+        case relationship(possibleValues: [Relationship])
     }
     
     let key : String
     let value : String
     let fieldType : FieldType
+    
+    let optional : Bool
+    let isMultiSelect : Bool
 }
 
 struct ModelInstanceRepresentation : Equatable
