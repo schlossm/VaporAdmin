@@ -68,6 +68,13 @@ public struct Admin : Sendable
                 routes: .init(group: "admin"),
                 sessions: .init(enabled: true),
                 jwt: jwks != nil ? .init(jwks: .init(json: jwks!)) : nil,
+                throttle: .init(
+                        login: .init(
+                            perIdentifier: .init(maxFailures: 5, window: 15 * 60),   // 5 failures / 15 min per account
+                            perSource: .init(maxFailures: 5, window: 15 * 60),       // 5 failures / 15 min per IP
+                            enabled: true
+                        )
+                    ),
                 views: .init(
                     login: .init(
                         style: .minimalism,

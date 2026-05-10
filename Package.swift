@@ -20,8 +20,8 @@ let package = Package(
         .package(url: "https://github.com/vapor/leaf.git", from: "4.3.0"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
-        .package(url: "https://github.com/schlossm/passage.git", branch: "linux-crypto"),
-        .package(url: "https://github.com/schlossm/passage-fluent.git", branch: "linux-crypto"),
+        .package(url: "https://github.com/vapor-community/passage.git", from: "0.5.0"),
+        .package(url: "https://github.com/rozd/passage-fluent.git", from: "0.0.19"),
     ],
     targets: [
         .macro(

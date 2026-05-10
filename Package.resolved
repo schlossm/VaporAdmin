@@ -1,5 +1,5 @@
 {
-  "originHash" : "deeeb601335d971aa03db57c639438d962173b4a6897f0381d85f92718fc39ae",
+  "originHash" : "bc8e7cf8369e6a33388583d0b0971df8336a7a02cacecc8b82e3c1b59d88cb1f",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -94,19 +94,19 @@
     {
       "identity" : "passage",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/schlossm/passage",
+      "location" : "https://github.com/vapor-community/passage.git",
       "state" : {
-        "branch" : "linux-crypto",
-        "revision" : "a1b5fadc898aee21ac2a544c51ecdebeee8840b9"
+        "revision" : "0abf513ce03fe49afee3846ccec027718a685ebe",
+        "version" : "0.5.1"
       }
     },
     {
       "identity" : "passage-fluent",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/schlossm/passage-fluent.git",
+      "location" : "https://github.com/rozd/passage-fluent.git",
       "state" : {
-        "branch" : "linux-crypto",
-        "revision" : "682510766d52459ea73c729bb3d1c5e677afbd52"
+        "revision" : "c234de1dc7049aa81f769dadf5d065971980e580",
+        "version" : "0.0.19"
       }
     },
     {
@@ -204,8 +204,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto.git",
       "state" : {
-        "revision" : "fa308c07a6fa04a727212d793e761460e41049c3",
-        "version" : "4.3.0"
+        "revision" : "1b6b2e274e85105bfa155183145a1dcfd63331f1",
+        "version" : "4.5.0"
       }
     },
     {
@@ -258,8 +258,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio.git",
       "state" : {
-        "revision" : "558f24a4647193b5a0e2104031b71c55d31ff83a",
-        "version" : "2.97.1"
+        "revision" : "f71c8d2a5e74a2c6d11a0fbe324774b5d6084237",
+        "version" : "2.99.0"
       }
     },
     {
@@ -348,8 +348,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/vapor.git",
       "state" : {
-        "revision" : "a8db2dbda8b3cdc8a61bd35128590bd296e85563",
-        "version" : "4.121.3"
+        "revision" : "cfd8f434843ac7850e2d97f46c1aa5ddb906cf1c",
+        "version" : "4.121.4"
       }
     },
     {
