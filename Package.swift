@@ -12,6 +12,11 @@ let package = Package(
             targets: ["VaporAdmin"]
         ),
     ],
+    traits: [
+        .trait(name: "Passage"),
+        .trait(name: "PassageFluent"),
+        .default(enabledTraits: ["Passage", "PassageFluent"]),
+    ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0-latest"),
         .package(url: "https://github.com/vapor/vapor.git", from: "4.110.1"),
@@ -43,8 +48,8 @@ let package = Package(
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "Passage", package: "passage"),
-                .product(name: "PassageFluent", package: "passage-fluent"),
+                .product(name: "Passage", package: "passage", condition: .when(traits: ["Passage"])),
+                .product(name: "PassageFluent", package: "passage-fluent", condition: .when(traits: ["PassageFluent"])),
             ],
             resources: [
                 .copy("../../Resources/Views"),

@@ -92,8 +92,8 @@ That's it! VaporAdmin will render your model at `<origin>/admin/<modelName>`
 ## What's Next
 
 - [ ] Support client customization of Passage
-- [ ] Support authentication setups other than Passage
-- [ ] Support a custom route installation path
+- [x] Support authentication setups other than Passage
+- [x] Support a custom route installation path
 - [ ] Support admin authentication model management (managing the users that can log into VaporAdmin from within VaporAdmin's GUI)
 - [ ] Support as many `django.contrib.admin` `ModelAdmin` options as possible in Swift + Fluent + Leaf
 - [ ] Support as many `django.contrib.admin` `AdminSite` options as possible in Swift + Fluent + Leaf

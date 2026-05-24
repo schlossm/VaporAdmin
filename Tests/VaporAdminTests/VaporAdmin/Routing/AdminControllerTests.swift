@@ -327,11 +327,17 @@ struct AdminControllerTests
             app.databases.use(database.configuration, as: .test)
             app.middleware.use(app.sessions.middleware)
             try await app.admin.configure(app: app,
-                                          origin: URL(string: "https://www.example.com")!,
-                                          jwks: emptyJwks,
-                                          services: services,
-                                          userModelType: Passage.OnlyForTest.InMemoryUser.self)
-            
+                                          configuration: .init(authentication: .passageCustom(services: services,
+                                                                                              configuration: .init(origin: URL(string: "https://www.example.com")!,
+                                                                                                                   routes: .init(group: "admin"),
+                                                                                                                   sessions: .init(enabled: true),
+                                                                                                                   jwt: .init(jwks: .init(json: emptyJwks)),
+                                                                                                                   views: .init(login: .init(
+                                                                                                                    style: .minimalism,
+                                                                                                                    theme: .init(colors: .mintDark),
+                                                                                                                    redirect: .init(onSuccess: "/admin/"),
+                                                                                                                    identifier: .username))),
+                                                                                              userModelType: Passage.OnlyForTest.InMemoryUser.self)))
             return try await run(app, store, renderer)
         }
     }

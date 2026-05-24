@@ -11,24 +11,56 @@ import Passage
 import Fluent
 import Vapor
 
-final class AdminController<UserModel : Authenticatable & Sendable> : RouteCollection, Sendable
+private extension Admin.Configuration.Authentication
+{
+    func redirectMiddleware(base: String) throws -> any Middleware
+    {
+        switch self
+        {
+        case .passage, .passagePreConfigured:
+            return PassageFluent.UserModel.redirectMiddleware(path: "/\(base)/login?loginRequired=true")
+            
+        case .passageCustom(_, _, let userModelType), .custom(_, let userModelType, _):
+            func getMiddleware<UserModel : Authenticatable>(userModelType: UserModel.Type) -> any Middleware
+            {
+                UserModel.redirectMiddleware(path: "/\(base)/login?loginRequired=true")
+            }
+            return getMiddleware(userModelType: userModelType)
+        }
+    }
+}
+
+final class AdminController : RouteCollection, Sendable
 {
     private let coordinator : ModelCoordinator
+    private let configuration : Admin.Configuration
     
-    init(app: Application)
+    init(app: Application, configuration: Admin.Configuration)
     {
         coordinator = app.admin.databaseManager
+        self.configuration = configuration
     }
     
     func boot(routes: any RoutesBuilder) throws
     {
         registerJSFiles(on: routes)
         
-        let protected = routes.grouped("admin")
-            .grouped(PassageSessionAuthenticator())
-            .grouped(PassageBearerAuthenticator())
-            .grouped(UserModel.redirectMiddleware(path: "/admin/login?loginRequired=true"))
-            .grouped(PassageGuard())
+        let protected : RoutesBuilder
+        switch configuration.authentication
+        {
+        case .passage, .passagePreConfigured, .passageCustom:
+            protected = try routes.grouped("\(configuration.base)")
+                .grouped(PassageSessionAuthenticator())
+                .grouped(PassageBearerAuthenticator())
+                .grouped(configuration.authentication.redirectMiddleware(base: configuration.base))
+                .grouped(PassageGuard())
+            
+        case .custom(let authenticators, _, let `guard`):
+            protected = try routes.grouped("\(configuration.base)")
+                .grouped(authenticators)
+                .grouped(configuration.authentication.redirectMiddleware(base: configuration.base))
+                .grouped(`guard`)
+        }
         
         protected.get { req in
             try await self.root(request: req)
