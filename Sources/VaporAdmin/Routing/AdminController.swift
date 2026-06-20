@@ -5,28 +5,67 @@
 //  Created by Michael Schloss on 2/1/26.
 //
 
-import PassageFluent
-import Foundation
+#if Passage
 import Passage
+#if PassageFluent
+import PassageFluent
+#endif
+#endif
+
+import Foundation
 import Fluent
 import Vapor
 
 private extension Admin.Configuration.Authentication
 {
-    func redirectMiddleware(base: String) throws -> any Middleware
+    func routes(builder: any RoutesBuilder, adminSiteBasePath: String) -> RoutesBuilder
     {
-        switch self
+        func getMiddleware<UserModel : Authenticatable>(userModelType: UserModel.Type) -> any Middleware
         {
-        case .passage, .passagePreConfigured:
-            return PassageFluent.UserModel.redirectMiddleware(path: "/\(base)/login?loginRequired=true")
-            
-        case .passageCustom(_, _, let userModelType), .custom(_, let userModelType, _):
-            func getMiddleware<UserModel : Authenticatable>(userModelType: UserModel.Type) -> any Middleware
-            {
-                UserModel.redirectMiddleware(path: "/\(base)/login?loginRequired=true")
-            }
-            return getMiddleware(userModelType: userModelType)
+            UserModel.redirectMiddleware(path: "/\(adminSiteBasePath)/login?loginRequired=true")
         }
+        
+        switch state
+        {
+        #if Passage || PassageFluent
+        case .passageClientConfigured(let userModelType),
+                .passageUseVaporAdminConfiguration(_, let userModelType, _),
+                .passageUseCustomConfiguration(_, _, _, _, let userModelType):
+            return builder.grouped("\(adminSiteBasePath)")
+                .grouped(PassageSessionAuthenticator())
+                .grouped(PassageBearerAuthenticator())
+                .grouped(getMiddleware(userModelType: userModelType))
+                .grouped(PassageGuard())
+                .grouped(MissingUsernameRedirectMiddleware(adminSiteBasePath: adminSiteBasePath))
+        #endif
+            
+        case .customConfiguration(let authenticators, let userModelType, let `guard`, _):
+            return builder.grouped("\(adminSiteBasePath)")
+                .grouped(authenticators)
+                .grouped(getMiddleware(userModelType: userModelType))
+                .grouped(`guard`)
+                .grouped(MissingUsernameRedirectMiddleware(adminSiteBasePath: adminSiteBasePath))
+        }
+    }
+    
+    func usernameFromRequest(_ req: Request, adminSiteBasePath: String) throws -> String
+    {
+        let username = try {
+            switch state
+            {
+#if Passage || PassageFluent
+            case .passageClientConfigured, .passageUseVaporAdminConfiguration, .passageUseCustomConfiguration:
+                return try req.passage.user.username
+#endif
+                
+            case .customConfiguration(_, _, _, let usernameFromRequest):
+                return try usernameFromRequest(req)
+            }
+        }()
+        guard let username else {
+            throw AdminControllerError.missingUsername
+        }
+        return username
     }
 }
 
@@ -39,41 +78,42 @@ final class AdminController : RouteCollection, Sendable
     {
         coordinator = app.admin.databaseManager
         self.configuration = configuration
+        
+        guard app.routes.all.contains(where: { $0.path == ["\(configuration.base)", "login"] }) else
+        {
+            app.logger.critical("""
+                                The login route is missing, thus VaporAdmin is misconfigured:
+                                    * If you configured VaporAdmin with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring VaporAdmin
+                                    * If you configured VaporAdmin with a client-configured Passage instance, ensure Passage is configured BEFORE configuring VaporAdmin
+                                    * If you configured VaporAdmin with a custom Passage Configuration object, ensure the login route and/or views are defined
+                                """)
+            assertionFailure("""
+                             The login route is missing, thus VaporAdmin is misconfigured:
+                                 * If you configured VaporAdmin with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring VaporAdmin
+                                 * If you configured VaporAdmin with a client-configured Passage instance, ensure Passage is configured BEFORE configuring VaporAdmin
+                                 * If you configured VaporAdmin with a custom Passage Configuration object, ensure the login route and/or views are defined
+                             """)
+            return
+        }
     }
     
     func boot(routes: any RoutesBuilder) throws
     {
         registerJSFiles(on: routes)
-        
-        let protected : RoutesBuilder
-        switch configuration.authentication
-        {
-        case .passage, .passagePreConfigured, .passageCustom:
-            protected = try routes.grouped("\(configuration.base)")
-                .grouped(PassageSessionAuthenticator())
-                .grouped(PassageBearerAuthenticator())
-                .grouped(configuration.authentication.redirectMiddleware(base: configuration.base))
-                .grouped(PassageGuard())
-            
-        case .custom(let authenticators, _, let `guard`):
-            protected = try routes.grouped("\(configuration.base)")
-                .grouped(authenticators)
-                .grouped(configuration.authentication.redirectMiddleware(base: configuration.base))
-                .grouped(`guard`)
-        }
+        let protected = configuration.authentication.routes(builder: routes, adminSiteBasePath: configuration.base)
         
         protected.get { req in
             try await self.root(request: req)
         }
         
-        // /admin/<modelName>
+        // /<base>/<modelName>
         
         protected.get("models", ":modelName") { req in
             let modelName = try req.parameters.require("modelName")
             return try await self.modelEntryListView(model: modelName, request: req)
         }
         
-        // /admin/<modelName>/create
+        // /<base>/<modelName>/create
         
         protected.get("models", ":modelName", "create") { req in
             let modelName = try req.parameters.require("modelName")
@@ -85,7 +125,7 @@ final class AdminController : RouteCollection, Sendable
             return try await self.modelEntryCreateSave(model: modelName, request: req)
         }
         
-        // /admin/<modelName>/details/<modelID>
+        // /<base>/<modelName>/details/<modelID>
         
         protected.get("models", ":modelName", "details", ":entry") { req in
             let modelName = try req.parameters.require("modelName")
@@ -129,7 +169,7 @@ final class AdminController : RouteCollection, Sendable
     
     private func root(request: Request) async throws -> View
     {
-        let username = try request.passage.user.username!
+        let username = try configuration.authentication.usernameFromRequest(request, adminSiteBasePath: configuration.base)
         
         let adminRootContext = AdminContext.Root(header: .init(username: username, breadcrumbs: [.init(text: "Admin Panel", relativeHREF: "", isActive: true)]), modelNames: coordinator.listModels())
         return try await request.view.render("admin-root", adminRootContext)
@@ -137,7 +177,7 @@ final class AdminController : RouteCollection, Sendable
     
     private func modelEntryListView(model: String, request: Request) async throws -> View
     {
-        let username = try request.passage.user.username!
+        let username = try configuration.authentication.usernameFromRequest(request, adminSiteBasePath: configuration.base)
         let entries = try await coordinator.listEntries(for: model)
         
         let adminEntryListContext = AdminContext.List(header: .init(username: username,
@@ -152,7 +192,7 @@ final class AdminController : RouteCollection, Sendable
     
     private func modelEntryDetailView(model: String, parameters: Parameters, request: Request) async throws -> View
     {
-        let username = try request.passage.user.username!
+        let username = try configuration.authentication.usernameFromRequest(request, adminSiteBasePath: configuration.base)
         let details = try await coordinator.details(for: parameters, model: model)
         let rawModels = details.properties
         
@@ -171,15 +211,13 @@ final class AdminController : RouteCollection, Sendable
     
     private func modelEntryDetailSave(model: String, parameters: Parameters, request: Request) async throws -> Response
     {
-        _ = try request.passage.user
-        
         try await coordinator.attemptUpdate(for: parameters, model: model, data: request.content)
         return .init(status: .ok)
     }
     
     private func modelEntryCreateView(model: String, request: Request) async throws -> View
     {
-        let username = try request.passage.user.username!
+        let username = try configuration.authentication.usernameFromRequest(request, adminSiteBasePath: configuration.base)
         let details = try await coordinator.newModelInfo(for: model)
         
         let adminEntryDetailContext = AdminContext.Detail.Create(header: .init(username: username,
@@ -195,14 +233,12 @@ final class AdminController : RouteCollection, Sendable
     
     private func modelEntryCreateSave(model: String, request: Request) async throws -> Response
     {
-        _ = try request.passage.user
         try await coordinator.attemptCreate(for: model, data: request.content)
         return .init(body: .init(data: try JSONEncoder().encode(Redirect(model: model))))
     }
     
     private func modelEntryDelete(model: String, parameters: Parameters, request: Request) async throws -> Response
     {
-        _ = try request.passage.user
         try await coordinator.attemptDelete(for: model, parameters: parameters)
         return .init(body: .init(data: try JSONEncoder().encode(Redirect(model: model))))
     }

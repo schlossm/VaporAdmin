@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3
 
 import PackageDescription
 import CompilerPluginSupport
@@ -14,8 +14,8 @@ let package = Package(
     ],
     traits: [
         .trait(name: "Passage"),
-        .trait(name: "PassageFluent"),
-        .default(enabledTraits: ["Passage", "PassageFluent"]),
+        .trait(name: "PassageFluent", enabledTraits: ["Passage"]),
+        .default(enabledTraits: ["PassageFluent"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0-latest"),
@@ -62,14 +62,13 @@ let package = Package(
                 dependencies: [
                     .target(name: "VaporAdmin"),
                     .target(name: "VaporAdminMacros"),
-                    .product(name: "Fluent", package: "fluent"),
                     .product(name: "VaporTesting", package: "vapor"),
                     .product(name: "XCTFluent", package: "fluent-kit"),
-                    .product(name: "PassageOnlyForTest", package: "passage"),
+                    .product(name: "PassageOnlyForTest", package: "passage", condition: .when(traits: ["Passage"])),
                     .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
                 ],
                 swiftSettings: swiftSettings
-            )
+            ),
     ],
 )
 

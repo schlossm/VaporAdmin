@@ -6,13 +6,7 @@ VaporAdmin enables CRUD operations on models registered with the library.
 ### Notices
 
 > [!CAUTION]
-> VaporAdmin uses `Passage` for authentication.  `Passage` declares itself as Alpha, so Vapor Admin is too.
-
-> [!CAUTION]
 > `Passage` by default exposes POST routes for authentication for client-based auth.  VaporAdmin does NOT attempt to block non-HTML calls, but does NOT provide a valid JWT generator; you should consider blocking browserless calls to `/admin/*` routes at your server level.
-
-> [!WARNING]
-> VaporAdmin doesn't yet allow for configuration of route paths and will unconditionally attempt to install its routes at `<origin>/admin`.
 
 > [!WARNING]
 > If you use `Passage` authentication for other parts of your app, those users will be able to log into the admin portal.  VaporAdmin doesn't yet segment users.
@@ -21,7 +15,7 @@ VaporAdmin enables CRUD operations on models registered with the library.
 Add VaporAdmin to your Package.swift:
 
 ```swift
-.package(url: "https://github.com/schlossm/VaporAdmin.git", from: "0.1.0")
+.package(url: "https://github.com/schlossm/VaporAdmin.git", from: "0.2.0")
 ```
 
 Then, add the `VaporAdmin` package to your dependencies:
@@ -71,13 +65,9 @@ extension Foo : CustomAdminDisplayable
 
 ### 2. Configure VaporAdmin
 
-On startup, call `app.admin.configure(app:origin:)`.  
+On startup, call `app.admin.configure(app:configuration:)`.  
 
-VaporAdmin currently uses `Passage` to manage authentication, and requires a single configuration property:
-
-* `origin` - The URL your site is hosted at
-
-Like Passage, VaporAdmin expects `sessions` to be enabled on your Vapor App, as well as a `Database` to be enabled and configured BEFORE configuring VaporAdmin.
+See the `Configuration` section for the possible configuration options supported by VaporAdmin
 
 ### 3. Register your model
 
@@ -88,6 +78,9 @@ app.admin.register(Foo.self)
 ```
 
 That's it! VaporAdmin will render your model at `<origin>/admin/<modelName>`
+
+## Configuration  ####
+
 
 ## What's Next
 
