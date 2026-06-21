@@ -9,7 +9,7 @@ VaporAdmin enables CRUD operations on models registered with the library.
 > `Passage` by default exposes POST routes for authentication for client-based auth.  VaporAdmin does NOT attempt to block non-HTML calls, but does NOT provide a valid JWT generator; you should consider blocking browser-less calls to `/admin/*` routes at your server level.
 
 > [!WARNING]
-> If you use `Passage` authentication for other parts of your app, those users will be able to log into the admin portal.  VaporAdmin doesn't yet segment users.
+> If you use `Passage` authentication for other parts of your app, those users will be able to log into the Admin Site.  VaporAdmin doesn't yet segment users.
 
 ## Installation
 Add VaporAdmin to your Package.swift:

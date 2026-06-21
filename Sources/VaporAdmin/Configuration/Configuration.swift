@@ -9,7 +9,7 @@ import Vapor
 
 public extension Admin
 {
-    /// The `VaporAdmin` configuration interface
+    /// The Admin Site configuration interface
     ///
     /// Currently, you can configure the following items:
     /// * The authentication model to be used

@@ -3,25 +3,25 @@ import Leaf
 import Fluent
 import LeafKit
 
-/// Add this macro to any `Model` to enable admin portal management.
+/// Add this macro to any `Model` to enable Admin Site management.
 ///
-/// Models managed by the admin portal will be eligible for CRUD operations through `<HOST_URL>/admin`
-/// - Note: The admin portal will attempt to use the `description` property for display.
-///         If this doesn't make sense for your use case, conform your `Model` to ``CustomAdminDisplayable`` to provide the Admin portal a custom description
+/// Models managed by the Admin Site will be eligible for CRUD operations
+/// - Note: The Admin Site will attempt to use the `description` property for display.
+///         If this doesn't make sense for your use case, conform your `Model` to ``CustomAdminDisplayable`` to provide the Admin Site a custom description
 @attached(member, names: named(adminMetadata)) @attached(extension, conformances: FluentAdminDisplay)
 public macro AdminDisplayable() = #externalMacro(module: "VaporAdminMacros", type: "AdminDisplayableMacro")
 
-/// A type with a customized textual representation for the admin portal
+/// A type with a customized textual representation for the Admin Site
 public protocol CustomAdminDisplayable
 {
-    /// A textual representation of this instance suitable for the admin portal
+    /// A textual representation of this instance suitable for the Admin Site
     var displayString : String { get }
 }
 
-/// To conform a Model to `FluentAdminDisplay`, add the ``AdminDisplayable()``.
+/// To conform a Model to `FluentAdminDisplay`, add the ``@AdminDisplayable`` macro.
 public typealias AdminModel = FluentAdminDisplay & Model
 
-/// Entry point into the Admin Portal
+/// Entry point into the Admin Site.  Call ``configure(app:configuration:)`` to configure the Admin Site and ``register(_:)`` to register a model for CRUD management
 public struct Admin : Sendable
 {
     let databaseManager : ModelCoordinator
@@ -37,15 +37,15 @@ public struct Admin : Sendable
         }
     }
     
-    /// Configures the admin portal
+    /// Configures the Admin Site
     ///
     /// * Registers leaf templates
-    /// * Adds admin routes to the app's router
+    /// * Adds admin routes to your app's router
     /// * Configures, if necessary, any authentication (`Passage` unless a custom authentication is provided)
     ///
     /// - Parameters:
     ///    - app: The `Vapor` application
-    ///    - configuration: The ``Configuration`` for `VaporAdmin`
+    ///    - configuration: The ``Configuration`` for the Admin Site
     public func configure(app: Application, configuration: Configuration) async throws
     {
         try registerLeafTemplates(on: app)
@@ -69,7 +69,7 @@ public struct Admin : Sendable
         app.leaf.sources = sources
     }
     
-    /// Register a `Model` for management through the admin portal
+    /// Register a `Model` for management through the Admin Site
     ///
     /// To register a compatible model, add the ``AdminDisplayable()`` macro to the `Model`.
     public func register<T: AdminModel>(_ model: T.Type)
@@ -85,7 +85,7 @@ private struct VaporAdminStorageKey : StorageKey
 
 extension Application
 {
-    /// Entry point into the Admin Portal
+    /// Entry point into the Admin Site
     public var admin : Admin
     {
         self.storage[VaporAdminStorageKey.self, default: Admin(database: self.db)]

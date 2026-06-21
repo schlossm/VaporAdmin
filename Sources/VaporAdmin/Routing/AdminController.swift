@@ -75,16 +75,16 @@ final class AdminController : RouteCollection, Sendable
         guard app.routes.all.contains(where: { $0.path == ["\(configuration.base)", "login"] }) else
         {
             app.logger.critical("""
-                                The login route is missing, thus VaporAdmin is misconfigured:
-                                    * If you configured VaporAdmin with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring VaporAdmin
-                                    * If you configured VaporAdmin with a client-configured Passage instance, ensure Passage is configured BEFORE configuring VaporAdmin
-                                    * If you configured VaporAdmin with a custom Passage Configuration object, ensure the login route and/or views are defined
+                                The login route is missing, thus the Admin Site is misconfigured:
+                                    * If you configured the Admin Site with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring the Admin Site
+                                    * If you configured the Admin Site with a client-configured Passage instance, ensure Passage is configured BEFORE configuring the Admin Site
+                                    * If you configured the Admin Site with a custom Passage Configuration object, ensure the login route and/or views are defined
                                 """)
             assertionFailure("""
-                             The login route is missing, thus VaporAdmin is misconfigured:
-                                 * If you configured VaporAdmin with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring VaporAdmin
-                                 * If you configured VaporAdmin with a client-configured Passage instance, ensure Passage is configured BEFORE configuring VaporAdmin
-                                 * If you configured VaporAdmin with a custom Passage Configuration object, ensure the login route and/or views are defined
+                             The login route is missing, thus the Admin Site is misconfigured:
+                                 * If you configured the Admin Site with a `custom` authentication strategy, ensure the "`\(configuration.base)/login`" route is registered BEFORE configuring the Admin Site
+                                 * If you configured the Admin Site with a client-configured Passage instance, ensure Passage is configured BEFORE configuring the Admin Site
+                                 * If you configured the Admin Site with a custom Passage Configuration object, ensure the login route and/or views are defined
                              """)
             return
         }

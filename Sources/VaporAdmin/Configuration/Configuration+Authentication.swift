@@ -9,18 +9,18 @@ import Vapor
 
 public extension Admin.Configuration
 {
-    /// Configuration for VaporAdmin's authentication strategy.
+    /// Configuration for the Admin Site's authentication strategy.
     ///
-    /// VaporAdmin supports both Passage-based authentication and fully custom authentication strategies, split into initializers:
+    /// The Admin Site supports both Passage-based authentication and fully custom authentication strategies, split into initializers:
     /// 1. Fully custom client authentication management through ``init(customAuthenticators:userModelType:guard:usernameFromRequest:)``
     /// 2. Providing custom configuration options for Passage through ``init(passageCustomServices:contracts:configuration:hooks:userModelType:)``
     ///     * If the "PassageFluent" trait is enabled, and you want to use PassageFluent's models, use ``init(passageCustomServices:contracts:configuration:hooks:)`` intead
-    /// 3. Directing VaporAdmin to use a client-configured Passage instance with ``skippingPassageConfiguration(userModelType:)``
+    /// 3. Directing the Admin Site to use a client-configured Passage instance with ``skippingPassageConfiguration(userModelType:)``
     ///     * If the "PassageFluent" trait is enabled, and you want to use PassageFluent's models, use ``skippingPassageConfiguration()`` intead
-    /// 4. Directing VaporAdmin to configure Passage for its own use with ``init(passageOriginURL:userModelType:store:)``
+    /// 4. Directing the Admin Site to configure Passage for its own use with ``init(passageOriginURL:userModelType:store:)``
     ///     * If the "PassageFluent" trait is enabled, and you want to use PassageFluent's models, use ``init(passageOriginURL:)`` intead
     ///
-    /// - Warning: If you custom configure Passage or a fully custom authentication strategy, you are responsible for also registering Login [and Register] paths BEFORE configuring VaporAdmin
+    /// - Warning: If you custom configure Passage or a fully custom authentication strategy, you are responsible for also registering Login [and Register] paths BEFORE configuring the Admin Site
     struct Authentication : Sendable
     {
         enum State
@@ -36,11 +36,11 @@ public extension Admin.Configuration
         
         let state : State
         
-        /// VaporAdmin will use your own Middleware and `Authenticatable` user model type for the Admin Site.
+        /// The Admin Site will use your own Middleware and `Authenticatable` user model type for the Admin Site.
         ///
-        /// - Warning: With this initializer, you are responsible for logging a user in and/or registering new accounts.  VaporAdmin expects login to be at "`/<Admin.Configuration.base>/login`"
+        /// - Warning: With this initializer, you are responsible for logging a user in and/or registering new accounts.  The Admin Site expects login to be at "`/<Admin.Configuration.base>/login`"
         ///
-        /// Authentication guarding on requests in `VaporAdmin` works as follows:
+        /// Authentication guarding on requests in the Admin Site works as follows:
         /// 1. Run Middleware to validate and resolve authentication strategies such as Session or Access Token
         /// 2. Check for the existence of the expected `Authenticatable` model type, or redirect to login if it's incorrect or missing
         /// 3. Perform a final, last-chance check that the request has an attached user object, else fail the request
@@ -60,9 +60,9 @@ public extension Admin.Configuration
         }
         
         #if Passage
-        /// VaporAdmin will use the pre-configured Passage instance from the client's `Application` instance.
+        /// The Admin Site will use the pre-configured Passage instance from the client's `Application` instance.
         ///
-        /// If you enable the "PassageFluent" trait, use ``skippingPassageConfiguration()`` instead to have VaporAdmin use `PassageFluent`'s user model type
+        /// If you enable the "PassageFluent" trait, use ``skippingPassageConfiguration()`` instead to have the Admin Site use `PassageFluent`'s user model type
         ///
         /// - Parameter userModelType: The user model `Type` to query with Passage authentication
         public static func skippingPassageConfiguration(userModelType: any (Authenticatable & Sendable).Type) -> Authentication
@@ -75,9 +75,9 @@ public extension Admin.Configuration
             state = .passageClientConfigured(userModelType: userModelType)
         }
         
-        /// VaporAdmin will configure Passage with suitable defaults for using the Admin Site
+        /// The Admin Site will configure Passage with suitable defaults for using the Admin Site
         ///
-        /// If you enable the "PassageFluent" trait, use ``init(passageOriginURL:)`` instead to have VaporAdmin use `PassageFluent`'s user model type
+        /// If you enable the "PassageFluent" trait, use ``init(passageOriginURL:)`` instead to have the Admin Site use `PassageFluent`'s user model type
         ///
         /// - Parameter passageOriginURL: The base URL of the server
         /// - Parameter userModelType: The user model `Type` to query with Passage authentication
@@ -87,9 +87,9 @@ public extension Admin.Configuration
             state = .passageUseVaporAdminConfiguration(origin: passageOriginURL, userModelType: userModelType, store: store)
         }
         
-        /// VaporAdmin will configure Passage with the configuration you provide.
+        /// The Admin Site will configure Passage with the configuration you provide.
         ///
-        /// If you enable the "PassageFluent" trait, use ``init(passageCustomServices:contracts:configuration:hooks:)`` instead to have VaporAdmin use `PassageFluent`'s user model type
+        /// If you enable the "PassageFluent" trait, use ``init(passageCustomServices:contracts:configuration:hooks:)`` instead to have the Admin Site use `PassageFluent`'s user model type
         ///
         /// - Parameter passageCustomServices: A Passage `Services` object.  The minimum required Service is a `Store`
         /// - Parameter contracts: A Passage `Contracts` object.  Defaults to no contracts
@@ -106,7 +106,7 @@ public extension Admin.Configuration
         }
         
         #if PassageFluent
-        /// VaporAdmin will use the pre-configured Passage instance from the client's `Application` instance.
+        /// The Admin Site will use the pre-configured Passage instance from the client's `Application` instance.
         public static func skippingPassageConfiguration() -> Authentication
         {
             .init()
@@ -117,7 +117,7 @@ public extension Admin.Configuration
             state = .passageClientConfigured(userModelType: PassageFluent.UserModel.self)
         }
         
-        /// VaporAdmin will configure Passage with suitable defaults for using the Admin Site.
+        /// The Admin Site will configure Passage with suitable defaults for using the Admin Site.
         ///
         /// This option will use `PassageFluent`'s user model type
         ///
@@ -127,7 +127,7 @@ public extension Admin.Configuration
             state = .passageUseVaporAdminConfiguration(origin: passageOriginURL, userModelType: PassageFluent.UserModel.self, store: nil)
         }
         
-        /// VaporAdmin will configure Passage with the configuration you provide for the Admin Site.
+        /// The Admin Site will configure Passage with the configuration you provide for the Admin Site.
         ///
         /// This option will use `PassageFluent`'s user model type
         ///
