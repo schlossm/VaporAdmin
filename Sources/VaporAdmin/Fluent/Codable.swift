@@ -1,10 +1,3 @@
-//
-//  Codable.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/2/26.
-//
-
 struct EncodedData<T : Encodable> : Encodable
 {
     let field : T

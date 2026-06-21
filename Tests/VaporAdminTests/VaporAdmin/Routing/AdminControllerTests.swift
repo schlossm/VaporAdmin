@@ -1,10 +1,3 @@
-//
-//  AdminControllerTests.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/5/26.
-//
-
 #if Passage
 import PassageOnlyForTest
 import Passage

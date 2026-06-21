@@ -17,6 +17,7 @@ struct MissingUsernameRedirectMiddleware : AsyncMiddleware
         }
         catch is AdminControllerError
         {
+            request.logger.error("Missing username on authenticated user object")
             return request.redirect(to: "/\(adminSiteBasePath)/login?loginRequired=true")
         }
     }

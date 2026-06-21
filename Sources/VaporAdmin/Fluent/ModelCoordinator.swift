@@ -1,10 +1,3 @@
-//
-//  ModelCoordinator.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 2/28/26.
-//
-
 import Fluent
 import Vapor
 

@@ -1,10 +1,3 @@
-//
-//  Parameters+RequireTests.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/5/26.
-//
-
 @testable import VaporAdmin
 import Testing
 import Vapor

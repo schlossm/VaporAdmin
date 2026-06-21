@@ -149,7 +149,7 @@ public extension Admin.Configuration
         func configureIfNeeded(app: Application, adminSiteBasePath: String) async throws
         {
             switch state {
-            #if Passage || PassageFluent
+            #if Passage
             case .passageClientConfigured:
                 break
                 

@@ -1,10 +1,3 @@
-//
-//  AdminController.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 2/1/26.
-//
-
 #if Passage
 import Passage
 #if PassageFluent
@@ -27,7 +20,7 @@ private extension Admin.Configuration.Authentication
         
         switch state
         {
-        #if Passage || PassageFluent
+        #if Passage
         case .passageClientConfigured(let userModelType),
                 .passageUseVaporAdminConfiguration(_, let userModelType, _),
                 .passageUseCustomConfiguration(_, _, _, _, let userModelType):
@@ -53,10 +46,10 @@ private extension Admin.Configuration.Authentication
         let username = try {
             switch state
             {
-#if Passage || PassageFluent
+            #if Passage
             case .passageClientConfigured, .passageUseVaporAdminConfiguration, .passageUseCustomConfiguration:
                 return try req.passage.user.username
-#endif
+            #endif
                 
             case .customConfiguration(_, _, _, let usernameFromRequest):
                 return try usernameFromRequest(req)

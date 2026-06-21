@@ -1,10 +1,3 @@
-//
-//  ModelBox.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/2/26.
-//
-
 import Fluent
 import Vapor
 
