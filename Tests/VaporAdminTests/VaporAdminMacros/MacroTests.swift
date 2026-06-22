@@ -1,10 +1,3 @@
-//
-//  MacroTests.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 3/29/26.
-//
-
 import SwiftSyntaxMacrosTestSupport
 import VaporAdminMacros
 import VaporAdmin

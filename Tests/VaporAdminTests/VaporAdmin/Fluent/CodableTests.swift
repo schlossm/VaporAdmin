@@ -1,10 +1,3 @@
-//
-//  CodableTests.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/3/26.
-//
-
 @testable import VaporAdmin
 import Foundation
 import Testing

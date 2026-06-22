@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3
 
 import PackageDescription
 import CompilerPluginSupport
@@ -11,6 +11,11 @@ let package = Package(
             name: "VaporAdmin",
             targets: ["VaporAdmin"]
         ),
+    ],
+    traits: [
+        .trait(name: "Passage"),
+        .trait(name: "PassageFluent", enabledTraits: ["Passage"]),
+        .default(enabledTraits: ["PassageFluent"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0-latest"),
@@ -43,8 +48,8 @@ let package = Package(
                 .product(name: "JWTKit", package: "jwt-kit"),
                 .product(name: "NIOCore", package: "swift-nio"),
                 .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "Passage", package: "passage"),
-                .product(name: "PassageFluent", package: "passage-fluent"),
+                .product(name: "Passage", package: "passage", condition: .when(traits: ["Passage"])),
+                .product(name: "PassageFluent", package: "passage-fluent", condition: .when(traits: ["PassageFluent"])),
             ],
             resources: [
                 .copy("../../Resources/Views"),
@@ -57,14 +62,13 @@ let package = Package(
                 dependencies: [
                     .target(name: "VaporAdmin"),
                     .target(name: "VaporAdminMacros"),
-                    .product(name: "Fluent", package: "fluent"),
                     .product(name: "VaporTesting", package: "vapor"),
                     .product(name: "XCTFluent", package: "fluent-kit"),
-                    .product(name: "PassageOnlyForTest", package: "passage"),
+                    .product(name: "PassageOnlyForTest", package: "passage", condition: .when(traits: ["Passage"])),
                     .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
                 ],
                 swiftSettings: swiftSettings
-            )
+            ),
     ],
 )
 

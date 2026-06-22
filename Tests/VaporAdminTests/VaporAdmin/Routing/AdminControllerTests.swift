@@ -1,15 +1,11 @@
-//
-//  AdminControllerTests.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/5/26.
-//
+#if Passage
+import PassageOnlyForTest
+import Passage
+#endif
 
 @testable import VaporAdmin
-import PassageOnlyForTest
 import VaporTesting
 import XCTFluent
-import Passage
 import Testing
 import JWTKit
 import Fluent
@@ -292,6 +288,7 @@ struct AdminControllerTests
         }
     }
     
+    #if Passage
     @discardableResult
     private func withTestApp<T>(database: CallbackTestDatabase = defaultDatabase,
                                 _ run: (Application, Passage.OnlyForTest.InMemoryStore, CapturingViewRenderer) async throws -> T) async throws -> T
@@ -327,11 +324,17 @@ struct AdminControllerTests
             app.databases.use(database.configuration, as: .test)
             app.middleware.use(app.sessions.middleware)
             try await app.admin.configure(app: app,
-                                          origin: URL(string: "https://www.example.com")!,
-                                          jwks: emptyJwks,
-                                          services: services,
-                                          userModelType: Passage.OnlyForTest.InMemoryUser.self)
-            
+                                          configuration: .init(authentication: .init(passageCustomServices: services,
+                                                                                     configuration: .init(origin: URL(string: "https://www.example.com")!,
+                                                                                                          routes: .init(group: "admin"),
+                                                                                                          sessions: .init(enabled: true),
+                                                                                                          jwt: .init(jwks: .init(json: emptyJwks)),
+                                                                                                          views: .init(login: .init(
+                                                                                                            style: .minimalism,
+                                                                                                            theme: .init(colors: .mintDark),
+                                                                                                            redirect: .init(onSuccess: "/admin/"),
+                                                                                                            identifier: .username))),
+                                                                                     userModelType: Passage.OnlyForTest.InMemoryUser.self)))
             return try await run(app, store, renderer)
         }
     }
@@ -345,6 +348,35 @@ struct AdminControllerTests
         let credential = Credential.password(passwordHash)
         _ = try await store.users.create(identifier: .username(username), with: credential)
     }
+    #else
+    @discardableResult
+    private func withTestApp<T>(database: CallbackTestDatabase = defaultDatabase,
+                                _ run: (Application, PassageUnavailable, CapturingViewRenderer) async throws -> T) async throws -> T
+    {
+        return try await withApp { app in
+            let renderer = CapturingViewRenderer(eventLoop: app.eventLoopGroup.any())
+            app.views.use { req in
+                renderer
+            }
+            
+            app.routes.post("admin", "login") { req async throws in
+                let data = TestTokenResponse(accessToken: "123456", tokenType: "Bearer")
+                return Response(status: .ok, body: .init(data: try! JSONEncoder().encode(data)))
+            }
+            
+            app.databases.use(database.configuration, as: .test)
+            app.middleware.use(app.sessions.middleware)
+            try await app.admin.configure(app: app,
+                                          configuration: .init(authentication: .init(customAuthenticators: [PassageUnavailableSessionBearerAuthenticator()],
+                                                                                     userModelType: PassageUnavailableUser.self,
+                                                                                     guard: PassageUnavailableGuard(),
+                                                                                     usernameFromRequest: { _ in "Test" })))
+            return try await run(app, PassageUnavailable(), renderer)
+        }
+    }
+    
+    private func createTestUser(app: Application, store: PassageUnavailable, username: String, password: String) async throws { }
+    #endif
 }
 
 extension DatabaseID
@@ -355,6 +387,7 @@ extension DatabaseID
     }
 }
 
+#if Passage
 struct DefaultRandomGenerator : Passage.RandomGenerator
 {
     
@@ -382,6 +415,7 @@ struct DefaultRandomGenerator : Passage.RandomGenerator
         return String((0..<length).map { _ in characters.randomElement()! })
     }
 }
+#endif
 
 /// Mock ViewRenderer for testing that captures template names and context data
 /// without requiring Leaf template rendering
@@ -416,8 +450,37 @@ final class CapturingViewRenderer: ViewRenderer, @unchecked Sendable
     }
 }
 
-private struct TestTokenResponse : Decodable
+private struct TestTokenResponse : Codable
 {
     let accessToken : String
     let tokenType : String
 }
+
+// MARK: - No Passage Traits Support
+
+#if !Passage
+
+private struct PassageUnavailableUser : Authenticatable, Sendable {}
+
+private struct PassageUnavailableGuard : AsyncMiddleware
+{
+    func respond(to request: Request, chainingTo next: any AsyncResponder) async throws -> Response
+    {
+        try await next.respond(to: request)
+    }
+}
+
+private struct PassageUnavailableSessionBearerAuthenticator : AsyncBearerAuthenticator
+{
+    func authenticate(bearer: BearerAuthorization, for request: Request) async throws
+    {
+        request.auth.login(PassageUnavailableUser())
+    }
+}
+
+private struct PassageUnavailable : JWTPayload
+{
+    func verify(using algorithm: some JWTKit.JWTAlgorithm) async throws {}
+}
+
+#endif

@@ -1,10 +1,3 @@
-//
-//  FluentPropertyMetadataDefinitions.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 3/29/26.
-//
-
 import SwiftSyntax
 
 typealias PropertyMetadataMacroDefinition = @Sendable (String, String) -> String

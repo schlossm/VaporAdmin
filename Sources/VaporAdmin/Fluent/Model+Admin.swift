@@ -1,10 +1,3 @@
-//
-//  Model+Admin.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/3/26.
-//
-
 import Foundation
 import Fluent
 

@@ -1,10 +1,3 @@
-//
-//  IntermediateRepresentations.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 4/2/26.
-//
-
 struct ModelInstancePropertyRepresentation : Codable, Equatable
 {
     struct Relationship : Codable, Equatable

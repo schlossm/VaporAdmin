@@ -1,10 +1,3 @@
-//
-//  LeafContextModels.swift
-//  VaporAdmin
-//
-//  Created by Michael Schloss on 3/1/26.
-//
-
 struct AdminContext
 {
     struct Header : Codable
